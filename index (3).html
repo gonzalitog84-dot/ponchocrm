@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CRM Poncho Digital</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#F7F6F3;--surface:#fff;--border:#E8E5DF;--border-strong:#D4D0C8;--text:#1A1916;--text-2:#6B6860;--text-3:#9E9B94;--accent:#3C3489;--accent-bg:#EEEDFE;--teal-bg:#E1F5EE;--teal-text:#085041;--amber-bg:#FAEEDA;--amber-text:#633806;--red-bg:#FCEBEB;--red-text:#791F1F;--blue-bg:#E6F1FB;--blue-text:#0C447C;--gray-bg:#F1EFE8;--gray-text:#444441}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+.header{background:var(--surface);border-bottom:1px solid var(--border);padding:0 28px;display:flex;align-items:center;justify-content:space-between;height:54px;position:sticky;top:0;z-index:100}
+.logo{font-size:14px;font-weight:600;display:flex;align-items:center;gap:8px}
+.logo-dot{width:8px;height:8px;background:var(--accent);border-radius:50%}
+.header-right{display:flex;align-items:center;gap:10px}
+.status{font-size:11px;color:var(--text-3);display:flex;align-items:center;gap:5px}
+.status-dot{width:6px;height:6px;border-radius:50%;background:#ccc;transition:background .3s}
+.status-dot.ok{background:#1D9E75}
+.status-dot.loading{background:#EF9F27;animation:pulse 1s infinite}
+.status-dot.error{background:#E24B4A}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.btn{font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;padding:7px 14px;border-radius:8px;border:1px solid var(--border-strong);background:var(--surface);color:var(--text-2);cursor:pointer;transition:all .15s}
+.btn:hover{background:var(--bg);color:var(--text)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn-primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+.btn-primary:hover{background:#2d2670}
+.btn-sm{font-size:12px;padding:5px 11px;border-radius:7px}
+.container{max-width:1080px;margin:0 auto;padding:24px 20px}
+
+/* ALERT BAR */
+.alert-bar{background:#FFF8EC;border-bottom:1px solid #F5D78E;padding:10px 28px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.alert-bar.hidden{display:none}
+.alert-content{display:flex;align-items:flex-start;gap:10px;flex:1}
+.alert-icon{font-size:16px;flex-shrink:0;margin-top:1px}
+.alert-text{font-size:13px;color:#633806;font-weight:500;margin-bottom:4px}
+.alert-tasks{display:flex;gap:6px;flex-wrap:wrap}
+.alert-task{font-size:11px;background:#FAEEDA;color:#633806;padding:2px 8px;border-radius:10px;font-weight:500}
+.alert-task.vencida{background:#FCEBEB;color:#791F1F}
+.alert-close{background:none;border:none;color:var(--text-3);cursor:pointer;font-size:18px;flex-shrink:0;line-height:1}
+
+/* METRICS */
+.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px}
+.met{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px}
+.met-l{font-size:11px;font-weight:500;color:var(--text-3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:5px}
+.met-v{font-size:26px;font-weight:300}
+
+/* PIPELINE */
+.pipeline{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:20px}
+.pipe-col{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:11px 13px}
+.pipe-header{display:flex;align-items:center;gap:6px;margin-bottom:6px}
+.pipe-dot{width:7px;height:7px;border-radius:50%}
+.pipe-label{font-size:10px;font-weight:500;color:var(--text-3);text-transform:uppercase;letter-spacing:.06em}
+.pipe-n{font-size:22px;font-weight:300}
+
+/* TOOLBAR */
+.toolbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:10px;flex-wrap:wrap}
+.filters{display:flex;gap:5px;flex-wrap:wrap}
+.fb{font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;padding:5px 11px;border-radius:20px;border:1px solid var(--border-strong);background:transparent;color:var(--text-2);cursor:pointer;transition:all .15s}
+.fb:hover{background:var(--bg)}
+.fb.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+.search-wrap{position:relative}
+.search-wrap input{font-family:'DM Sans',sans-serif;font-size:13px;padding:7px 11px 7px 30px;border:1px solid var(--border-strong);border-radius:8px;background:var(--surface);color:var(--text);width:190px;outline:none}
+.search-wrap input:focus{border-color:var(--accent)}
+.search-icon{position:absolute;left:9px;top:50%;transform:translateY(-50%);color:var(--text-3);font-size:13px}
+
+/* CARDS */
+.cards-list{display:flex;flex-direction:column;gap:7px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:13px 16px;display:flex;align-items:flex-start;gap:13px;transition:border-color .15s,box-shadow .15s}
+.card:hover{border-color:var(--border-strong);box-shadow:0 2px 10px rgba(0,0,0,.05)}
+.card.urgent{border-left:3px solid #E24B4A}
+.card.today{border-left:3px solid #EF9F27}
+.av{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;flex-shrink:0;margin-top:1px}
+.card-info{flex:1;min-width:0}
+.card-name{font-size:14px;font-weight:500}
+.card-org{font-size:12px;color:var(--text-2);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card-tags{display:flex;gap:5px;flex-wrap:wrap;margin-top:6px}
+.tag{font-size:11px;font-weight:500;padding:2px 8px;border-radius:20px}
+.card-right{text-align:right;flex-shrink:0;min-width:150px}
+.card-fecha{font-size:12px;font-weight:500;color:var(--text-2)}
+.card-accion{font-size:11px;color:var(--text-3);margin-top:3px;line-height:1.4}
+.card-actions{display:flex;gap:5px;margin-top:8px;justify-content:flex-end;flex-wrap:wrap}
+.card-btn{font-family:'DM Sans',sans-serif;font-size:11px;padding:4px 9px;border-radius:6px;border:1px solid var(--border-strong);background:transparent;color:var(--text-2);cursor:pointer;transition:all .15s}
+.card-btn:hover{background:var(--bg)}
+.card-btn.edit{color:var(--accent);border-color:var(--accent-bg);background:var(--accent-bg)}
+.card-btn.mail{color:var(--teal-text);border-color:var(--teal-bg);background:var(--teal-bg)}
+
+/* MODALS */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:200;align-items:center;justify-content:center}
+.modal-overlay.open{display:flex}
+.modal{background:var(--surface);border-radius:16px;width:100%;max-width:520px;padding:26px;box-shadow:0 8px 40px rgba(0,0,0,.12);margin:16px;max-height:90vh;overflow-y:auto}
+.modal-title{font-size:16px;font-weight:600;margin-bottom:18px;display:flex;align-items:center;gap:8px}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.form-group{display:flex;flex-direction:column;gap:4px}
+.form-group.full{grid-column:1/-1}
+.form-group label{font-size:11px;font-weight:500;color:var(--text-3);text-transform:uppercase;letter-spacing:.07em}
+.form-group input,.form-group select,.form-group textarea{font-family:'DM Sans',sans-serif;font-size:13px;padding:8px 10px;border:1px solid var(--border-strong);border-radius:8px;background:var(--bg);color:var(--text);outline:none;transition:border-color .15s}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:var(--accent);background:var(--surface)}
+.form-group textarea{resize:vertical;min-height:65px}
+.modal-footer{display:flex;justify-content:flex-end;gap:8px;margin-top:18px}
+.btn-danger{color:#791F1F;border-color:#F7C1C1;background:#FCEBEB}
+.btn-danger:hover{background:#F7C1C1}
+
+/* MAIL MODAL */
+.mail-modal{max-width:600px}
+.mail-type-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px}
+.mail-type-btn{padding:10px 8px;border-radius:10px;border:1px solid var(--border-strong);background:transparent;cursor:pointer;text-align:center;transition:all .15s;font-family:'DM Sans',sans-serif}
+.mail-type-btn:hover{background:var(--bg)}
+.mail-type-btn.selected{border-color:var(--accent);background:var(--accent-bg)}
+.mt-icon{font-size:20px;margin-bottom:4px}
+.mt-label{font-size:12px;font-weight:500;color:var(--text);display:block}
+.mt-desc{font-size:10px;color:var(--text-3);display:block;margin-top:1px}
+.mail-context label{font-size:11px;font-weight:500;color:var(--text-3);text-transform:uppercase;letter-spacing:.07em;display:block;margin-bottom:5px}
+.mail-context textarea{width:100%;font-family:'DM Sans',sans-serif;font-size:13px;padding:9px 11px;border:1px solid var(--border-strong);border-radius:8px;background:var(--bg);color:var(--text);outline:none;resize:vertical;min-height:70px;margin-bottom:14px}
+.mail-context textarea:focus{border-color:var(--accent);background:var(--surface)}
+.mail-result{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:14px;margin-top:14px;display:none}
+.mail-result-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.mail-result-title{font-size:12px;font-weight:500;color:var(--text-3);text-transform:uppercase;letter-spacing:.06em}
+.mail-copy-btn{font-family:'DM Sans',sans-serif;font-size:12px;padding:4px 10px;border-radius:6px;border:1px solid var(--border-strong);background:var(--surface);color:var(--text-2);cursor:pointer}
+.mail-copy-btn:hover{background:var(--border)}
+.mail-subject{font-size:13px;font-weight:600;color:var(--text);margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid var(--border)}
+.mail-body{font-size:13px;color:var(--text-2);line-height:1.7;white-space:pre-wrap}
+.mail-loading{text-align:center;padding:24px;color:var(--text-3);font-size:13px;display:none}
+.spinner{display:inline-block;width:16px;height:16px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;margin-right:8px;vertical-align:middle}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* EMPTY / LOADER */
+.empty{text-align:center;padding:48px;color:var(--text-3);font-size:14px}
+.page-loader{text-align:center;padding:60px;color:var(--text-3);font-size:13px}
+
+/* TOAST */
+.toast{position:fixed;bottom:22px;right:22px;background:var(--text);color:#fff;font-size:13px;padding:9px 16px;border-radius:8px;z-index:300;opacity:0;transform:translateY(8px);transition:all .2s;pointer-events:none;max-width:300px}
+.toast.show{opacity:1;transform:translateY(0)}
+
+@media(max-width:680px){
+  .metrics{grid-template-columns:repeat(2,1fr)}
+  .pipeline{grid-template-columns:repeat(3,1fr)}
+  .form-grid,.mail-type-grid{grid-template-columns:1fr 1fr}
+  .card{flex-wrap:wrap}
+  .card-right{min-width:unset;text-align:left;width:100%}
+  .card-actions{justify-content:flex-start}
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo"><div class="logo-dot"></div>Poncho Digital — CRM</div>
+  <div class="header-right">
+    <div class="status"><div class="status-dot loading" id="status-dot"></div><span id="status-txt">Conectando...</span></div>
+    <button class="btn btn-sm" onclick="checkTodayTasks()">📋 Tareas de hoy</button>
+    <button class="btn btn-primary btn-sm" onclick="openLeadModal(null)">+ Nuevo lead</button>
+  </div>
+</div>
+
+<div class="alert-bar hidden" id="alert-bar">
+  <div class="alert-content">
+    <span class="alert-icon">⚡</span>
+    <div>
+      <div class="alert-text" id="alert-text"></div>
+      <div class="alert-tasks" id="alert-tasks"></div>
+    </div>
+  </div>
+  <button class="alert-close" onclick="document.getElementById('alert-bar').classList.add('hidden')">✕</button>
+</div>
+
+<div class="container">
+  <div class="metrics" id="metrics"><div class="page-loader">Cargando...</div></div>
+  <div class="pipeline" id="pipeline"></div>
+  <div class="toolbar">
+    <div class="filters">
+      <button class="fb active" onclick="setFilter('todos',this)">Todos</button>
+      <button class="fb" onclick="setFilter('warroom',this)">Warroom</button>
+      <button class="fb" onclick="setFilter('public_affairs',this)">Public Affairs</button>
+      <button class="fb" onclick="setFilter('hot',this)">🔴 Hot</button>
+      <button class="fb" onclick="setFilter('warm',this)">🟡 Warm</button>
+      <button class="fb" onclick="setFilter('hoy',this)">📅 Hoy</button>
+    </div>
+    <div class="search-wrap">
+      <span class="search-icon">🔍</span>
+      <input type="text" placeholder="Buscar..." id="search" oninput="renderCards()">
+    </div>
+  </div>
+  <div class="cards-list" id="cards"><div class="page-loader">Cargando leads...</div></div>
+</div>
+
+<!-- LEAD MODAL -->
+<div class="modal-overlay" id="lead-modal-overlay">
+  <div class="modal">
+    <div class="modal-title" id="lead-modal-title">Nuevo lead</div>
+    <div class="form-grid">
+      <div class="form-group full"><label>Nombre completo</label><input type="text" id="f-nombre" placeholder="Nombre y apellido"></div>
+      <div class="form-group"><label>Organización</label><input type="text" id="f-org" placeholder="Empresa / Partido"></div>
+      <div class="form-group"><label>Cargo / Rol</label><input type="text" id="f-rol" placeholder="Cargo o función"></div>
+      <div class="form-group"><label>Email</label><input type="email" id="f-email" placeholder="mail@dominio.com"></div>
+      <div class="form-group"><label>Producto</label>
+        <select id="f-producto"><option value="warroom">Warroom</option><option value="public_affairs">Public Affairs</option></select>
+      </div>
+      <div class="form-group"><label>Etapa</label>
+        <select id="f-etapa"><option>Prospecto</option><option>Contactado</option><option>Demo</option><option>Propuesta</option><option>Cierre</option></select>
+      </div>
+      <div class="form-group"><label>Temperatura</label>
+        <select id="f-temp"><option value="hot">🔴 Hot</option><option value="warm">🟡 Warm</option><option value="cold">🔵 Cold</option></select>
+      </div>
+      <div class="form-group"><label>Canal</label>
+        <select id="f-canal"><option>WhatsApp</option><option>Mail</option><option>LinkedIn</option><option>Reunión</option><option>Mixto</option></select>
+      </div>
+      <div class="form-group full"><label>Próxima acción</label><input type="text" id="f-accion" placeholder="Qué tenés que hacer"></div>
+      <div class="form-group"><label>Fecha próxima acción</label><input type="date" id="f-fecha"></div>
+      <div class="form-group"><label>Monto estimado (USD)</label><input type="number" id="f-monto" placeholder="0"></div>
+      <div class="form-group full"><label>Notas</label><textarea id="f-notas" placeholder="Contexto, historial, detalles..."></textarea></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-danger" id="btn-delete" onclick="deleteLead()" style="display:none">Eliminar</button>
+      <button class="btn" onclick="closeLeadModal()">Cancelar</button>
+      <button class="btn btn-primary" id="btn-save-lead" onclick="saveLead()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MAIL MODAL -->
+<div class="modal-overlay" id="mail-modal-overlay">
+  <div class="modal mail-modal">
+    <div class="modal-title">✉️ Mail para <span id="mail-lead-name" style="color:var(--accent)"></span></div>
+    <div class="mail-type-grid">
+      <button class="mail-type-btn selected" onclick="selectMailType(this,'primer_contacto')"><div class="mt-icon">👋</div><span class="mt-label">Primer contacto</span><span class="mt-desc">Presentación</span></button>
+      <button class="mail-type-btn" onclick="selectMailType(this,'follow_up')"><div class="mt-icon">🔄</div><span class="mt-label">Follow-up</span><span class="mt-desc">Sin respuesta</span></button>
+      <button class="mail-type-btn" onclick="selectMailType(this,'propuesta')"><div class="mt-icon">📄</div><span class="mt-label">Propuesta</span><span class="mt-desc">Envío propuesta</span></button>
+      <button class="mail-type-btn" onclick="selectMailType(this,'demo')"><div class="mt-icon">🖥️</div><span class="mt-label">Agendar demo</span><span class="mt-desc">Reunión demo</span></button>
+      <button class="mail-type-btn" onclick="selectMailType(this,'cierre')"><div class="mt-icon">🤝</div><span class="mt-label">Cierre</span><span class="mt-desc">Avanzar contrato</span></button>
+      <button class="mail-type-btn" onclick="selectMailType(this,'custom')"><div class="mt-icon">✏️</div><span class="mt-label">Personalizado</span><span class="mt-desc">Describí vos</span></button>
+    </div>
+    <div class="mail-context">
+      <label>Contexto adicional (opcional)</label>
+      <textarea id="mail-context-input" placeholder="Ej: mencionar que nos vimos en el evento X, que el precio es $Y..."></textarea>
+    </div>
+    <div class="mail-loading" id="mail-loading"><span class="spinner"></span>Generando mail con IA...</div>
+    <div class="mail-result" id="mail-result">
+      <div class="mail-result-header">
+        <span class="mail-result-title">Mail generado</span>
+        <button class="mail-copy-btn" onclick="copyMail()">📋 Copiar todo</button>
+      </div>
+      <div class="mail-subject" id="mail-subject-display"></div>
+      <div class="mail-body" id="mail-body-display"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeMailModal()">Cerrar</button>
+      <button class="btn btn-primary" id="btn-gen-mail" onclick="generateMail()">✨ Generar mail</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ─── CONFIG SUPABASE ────────────────────────────────────────
+const SUPABASE_URL = 'https://ebrtpohmcmabtdqyrqtl.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_46IdjeFhjQLMXTKshOZQIQ_l4DiG3G-';
+const { createClient } = supabase;
+const db = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// ─── STATE ──────────────────────────────────────────────────
+let leads = [];
+let currentFilter = 'todos';
+let editingId = null;
+let mailLeadId = null;
+let selectedMailType = 'primer_contacto';
+
+// ─── STATUS ─────────────────────────────────────────────────
+function setStatus(s, msg) {
+  const dot = document.getElementById('status-dot');
+  const txt = document.getElementById('status-txt');
+  dot.className = 'status-dot ' + s;
+  txt.textContent = msg || (s==='ok'?'Sincronizado':s==='loading'?'Guardando...':'Error de conexión');
+}
+
+// ─── LOAD DATA ──────────────────────────────────────────────
+async function loadData() {
+  setStatus('loading', 'Cargando...');
+  const { data, error } = await db.from('leads').select('*').order('created_at', { ascending: false });
+  if (error) { setStatus('error'); showToast('Error al cargar datos: ' + error.message); return; }
+  leads = data || [];
+  setStatus('ok');
+  render();
+  checkTodayTasksAuto();
+}
+
+// ─── TODAY TASKS ────────────────────────────────────────────
+function getTodayStr() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
+function checkTodayTasksAuto() {
+  const today = getTodayStr();
+  const todayLeads = leads.filter(l => l.fecha === today);
+  const overdueLeads = leads.filter(l => l.fecha && l.fecha < today && l.etapa !== 'Cierre');
+  if (!todayLeads.length && !overdueLeads.length) return;
+  showAlertBar(todayLeads, overdueLeads);
+  if ('Notification' in window) {
+    if (Notification.permission === 'granted') sendNotification(todayLeads, overdueLeads);
+    else if (Notification.permission !== 'denied') {
+      Notification.requestPermission().then(p => { if(p==='granted') sendNotification(todayLeads, overdueLeads); });
+    }
+  }
+}
+
+function checkTodayTasks() {
+  const today = getTodayStr();
+  const todayLeads = leads.filter(l => l.fecha === today);
+  const overdueLeads = leads.filter(l => l.fecha && l.fecha < today && l.etapa !== 'Cierre');
+  if (!todayLeads.length && !overdueLeads.length) { showToast('No tenés tareas pendientes para hoy 🎉'); return; }
+  showAlertBar(todayLeads, overdueLeads);
+}
+
+function showAlertBar(todayLeads, overdueLeads) {
+  const total = todayLeads.length + overdueLeads.length;
+  document.getElementById('alert-text').textContent = `Tenés ${total} tarea${total>1?'s':''} pendiente${total>1?'s':''} hoy`;
+  document.getElementById('alert-tasks').innerHTML = [
+    ...todayLeads.map(l=>`<span class="alert-task">${l.nombre}</span>`),
+    ...overdueLeads.map(l=>`<span class="alert-task vencida">${l.nombre} (vencida)</span>`)
+  ].join('');
+  document.getElementById('alert-bar').classList.remove('hidden');
+}
+
+function sendNotification(todayLeads, overdueLeads) {
+  const total = todayLeads.length + overdueLeads.length;
+  const names = [...todayLeads,...overdueLeads].map(l=>l.nombre).slice(0,3).join(', ');
+  new Notification('Poncho CRM — Tareas de hoy', { body: `${total} tarea${total>1?'s':''}: ${names}` });
+}
+
+// ─── MAIL GENERATOR ────────────────────────────────────────
+function openMailModal(leadId) {
+  mailLeadId = leadId;
+  const lead = leads.find(l => l.id === leadId);
+  document.getElementById('mail-lead-name').textContent = lead.nombre;
+  document.getElementById('mail-context-input').value = '';
+  document.getElementById('mail-result').style.display = 'none';
+  document.getElementById('mail-loading').style.display = 'none';
+  document.querySelectorAll('.mail-type-btn').forEach((b,i) => b.classList.toggle('selected', i===0));
+  selectedMailType = 'primer_contacto';
+  document.getElementById('mail-modal-overlay').classList.add('open');
+}
+function closeMailModal() { document.getElementById('mail-modal-overlay').classList.remove('open'); }
+function selectMailType(btn, type) {
+  document.querySelectorAll('.mail-type-btn').forEach(b=>b.classList.remove('selected'));
+  btn.classList.add('selected'); selectedMailType = type;
+}
+
+async function generateMail() {
+  const lead = leads.find(l => l.id === mailLeadId);
+  const context = document.getElementById('mail-context-input').value.trim();
+  const loadingEl = document.getElementById('mail-loading');
+  const resultEl = document.getElementById('mail-result');
+  const genBtn = document.getElementById('btn-gen-mail');
+  loadingEl.style.display = 'block'; resultEl.style.display = 'none'; genBtn.disabled = true;
+  const typeLabels = { primer_contacto:'primer contacto y presentación', follow_up:'follow-up porque no respondió', propuesta:'envío de propuesta comercial', demo:'agendar una demo del producto', cierre:'avanzar hacia el cierre y contrato', custom: context||'mail comercial general' };
+  const prompt = `Sos el área comercial de Poncho Digital, empresa argentina de software político y de asuntos públicos con dos productos: Warroom (para equipos de comunicación política en campaña) y Public Affairs (para gestión de asuntos públicos corporativos).
+
+Redactá un mail comercial en español rioplatense, tono ejecutivo pero cercano, sin ser informal.
+
+Datos del contacto:
+- Nombre: ${lead.nombre}
+- Organización: ${lead.org}
+- Cargo: ${lead.rol||'no especificado'}
+- Producto: ${lead.producto==='warroom'?'Warroom':'Public Affairs'}
+- Etapa: ${lead.etapa}
+- Canal: ${lead.canal}
+- Notas: ${lead.notas||'ninguna'}
+
+Tipo de mail: ${typeLabels[selectedMailType]}
+Contexto extra: ${context||'ninguno'}
+
+Respondé SOLO con JSON válido, sin markdown ni texto extra:
+{"subject":"asunto aquí","body":"cuerpo con saltos de línea usando \\n"}`;
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ model:'claude-sonnet-4-20250514', max_tokens:1000, messages:[{role:'user',content:prompt}] })
+    });
+    const data = await res.json();
+    const raw = data.content.map(c=>c.text||'').join('').replace(/```json|```/g,'').trim();
+    const parsed = JSON.parse(raw);
+    document.getElementById('mail-subject-display').textContent = parsed.subject;
+    document.getElementById('mail-body-display').textContent = parsed.body;
+    loadingEl.style.display = 'none'; resultEl.style.display = 'block';
+  } catch(e) {
+    loadingEl.style.display = 'none'; showToast('Error al generar el mail. Intentá de nuevo.');
+  }
+  genBtn.disabled = false;
+}
+
+function copyMail() {
+  const subject = document.getElementById('mail-subject-display').textContent;
+  const body = document.getElementById('mail-body-display').textContent;
+  navigator.clipboard.writeText(`Asunto: ${subject}\n\n${body}`).then(()=>showToast('Mail copiado ✓'));
+}
+
+// ─── RENDER HELPERS ─────────────────────────────────────────
+function initials(n) { return n.split(' ').slice(0,2).map(w=>w[0]).join('').toUpperCase(); }
+function avStyle(p) { return p==='warroom'?'background:#EEEDFE;color:#3C3489':'background:#E1F5EE;color:#085041'; }
+function tempTag(t) {
+  const m={hot:['#FCEBEB','#791F1F','Hot'],warm:['#FAEEDA','#633806','Warm'],cold:['#E6F1FB','#0C447C','Cold']};
+  const [bg,tx,lb]=m[t]||m.cold; return `<span class="tag" style="background:${bg};color:${tx}">${lb}</span>`;
+}
+function prodTag(p) { return p==='warroom'?`<span class="tag" style="background:#EEEDFE;color:#3C3489">Warroom</span>`:`<span class="tag" style="background:#E1F5EE;color:#085041">Public Affairs</span>`; }
+function etapaTag(e) { return `<span class="tag" style="background:#F1EFE8;color:#444441">${e}</span>`; }
+function fmtDate(d) {
+  if(!d) return '';
+  const parts = d.split('T')[0].split('-');
+  const months='ene feb mar abr may jun jul ago sep oct nov dic'.split(' ');
+  return `${parseInt(parts[2])} ${months[parseInt(parts[1])-1]}`;
+}
+function getCardClass(l) {
+  const today=getTodayStr(), fecha=l.fecha?l.fecha.split('T')[0]:'';
+  if(fecha && fecha<today && l.etapa!=='Cierre') return 'card urgent';
+  if(fecha===today) return 'card today';
+  return 'card';
+}
+function filtered() {
+  const q=document.getElementById('search').value.toLowerCase(), today=getTodayStr();
+  return leads.filter(l=>{
+    const mf=currentFilter==='todos'||(currentFilter==='warroom'&&l.producto==='warroom')||(currentFilter==='public_affairs'&&l.producto==='public_affairs')||(currentFilter==='hot'&&l.temp==='hot')||(currentFilter==='warm'&&l.temp==='warm')||(currentFilter==='hoy'&&l.fecha&&l.fecha.split('T')[0]===today);
+    const ms=!q||l.nombre.toLowerCase().includes(q)||l.org.toLowerCase().includes(q);
+    return mf&&ms;
+  });
+}
+
+function renderMetrics() {
+  const today=getTodayStr();
+  const tareasHoy=leads.filter(l=>l.fecha&&l.fecha.split('T')[0]===today).length;
+  const vencidas=leads.filter(l=>l.fecha&&l.fecha.split('T')[0]<today&&l.etapa!=='Cierre').length;
+  document.getElementById('metrics').innerHTML=[
+    ['Total leads',leads.length,''],
+    ['Warroom',leads.filter(l=>l.producto==='warroom').length,'color:#3C3489'],
+    ['Public Affairs',leads.filter(l=>l.producto==='public_affairs').length,'color:#085041'],
+    ['Tareas hoy'+(vencidas?` <span style="font-size:12px">+${vencidas}⚠️</span>`:''),tareasHoy,tareasHoy>0?'color:#633806':''],
+  ].map(([l,v,s])=>`<div class="met"><div class="met-l">${l}</div><div class="met-v" style="${s}">${v}</div></div>`).join('');
+}
+
+function renderPipeline() {
+  const etapas=[['Prospecto','#888780'],['Contactado','#7F77DD'],['Demo','#EF9F27'],['Propuesta','#1D9E75'],['Cierre','#D85A30']];
+  document.getElementById('pipeline').innerHTML=etapas.map(([e,c])=>{
+    const n=leads.filter(l=>l.etapa===e).length;
+    return `<div class="pipe-col"><div class="pipe-header"><div class="pipe-dot" style="background:${c}"></div><div class="pipe-label">${e}</div></div><div class="pipe-n">${n}</div></div>`;
+  }).join('');
+}
+
+function renderCards() {
+  const c=document.getElementById('cards'), data=filtered();
+  if(!data.length){c.innerHTML='<div class="empty">No hay leads con ese filtro.</div>';return;}
+  c.innerHTML=data.map(l=>`
+    <div class="${getCardClass(l)}">
+      <div class="av" style="${avStyle(l.producto)}">${initials(l.nombre)}</div>
+      <div class="card-info">
+        <div class="card-name">${l.nombre}</div>
+        <div class="card-org">${l.org||''}</div>
+        <div class="card-tags">${prodTag(l.producto)}${tempTag(l.temp)}${etapaTag(l.etapa)}</div>
+      </div>
+      <div class="card-right">
+        ${l.fecha?`<div class="card-fecha">${fmtDate(l.fecha)}</div>`:''}
+        <div class="card-accion">${l.accion||''}</div>
+        <div class="card-actions">
+          <button class="card-btn mail" onclick="openMailModal(${l.id})">✉️ Mail</button>
+          <button class="card-btn edit" onclick="openLeadModal(${l.id})">Editar</button>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+function render() { renderMetrics(); renderPipeline(); renderCards(); }
+function setFilter(f,btn) { currentFilter=f; document.querySelectorAll('.fb').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); renderCards(); }
+
+// ─── LEAD MODAL ─────────────────────────────────────────────
+function openLeadModal(id) {
+  editingId=id;
+  document.getElementById('lead-modal-title').textContent=id?'Editar lead':'Nuevo lead';
+  document.getElementById('btn-delete').style.display=id?'block':'none';
+  if(id){
+    const l=leads.find(x=>x.id===id);
+    document.getElementById('f-nombre').value=l.nombre||'';
+    document.getElementById('f-org').value=l.org||'';
+    document.getElementById('f-rol').value=l.rol||'';
+    document.getElementById('f-email').value=l.email||'';
+    document.getElementById('f-producto').value=l.producto||'warroom';
+    document.getElementById('f-etapa').value=l.etapa||'Prospecto';
+    document.getElementById('f-temp').value=l.temp||'warm';
+    document.getElementById('f-canal').value=l.canal||'WhatsApp';
+    document.getElementById('f-accion').value=l.accion||'';
+    document.getElementById('f-fecha').value=l.fecha?l.fecha.split('T')[0]:'';
+    document.getElementById('f-monto').value=l.monto||'';
+    document.getElementById('f-notas').value=l.notas||'';
+  } else {
+    ['f-nombre','f-org','f-rol','f-email','f-accion','f-fecha','f-notas'].forEach(i=>document.getElementById(i).value='');
+    document.getElementById('f-monto').value='';
+    document.getElementById('f-producto').value='warroom';
+    document.getElementById('f-etapa').value='Prospecto';
+    document.getElementById('f-temp').value='warm';
+    document.getElementById('f-canal').value='WhatsApp';
+  }
+  document.getElementById('lead-modal-overlay').classList.add('open');
+}
+function closeLeadModal() { document.getElementById('lead-modal-overlay').classList.remove('open'); }
+
+async function saveLead() {
+  const saveBtn=document.getElementById('btn-save-lead');
+  const data={
+    nombre:document.getElementById('f-nombre').value.trim(),
+    org:document.getElementById('f-org').value.trim(),
+    rol:document.getElementById('f-rol').value.trim(),
+    email:document.getElementById('f-email').value.trim(),
+    producto:document.getElementById('f-producto').value,
+    etapa:document.getElementById('f-etapa').value,
+    temp:document.getElementById('f-temp').value,
+    canal:document.getElementById('f-canal').value,
+    accion:document.getElementById('f-accion').value.trim(),
+    fecha:document.getElementById('f-fecha').value||null,
+    monto:document.getElementById('f-monto').value,
+    notas:document.getElementById('f-notas').value.trim(),
+    updated_at:new Date().toISOString()
+  };
+  if(!data.nombre){showToast('Escribí el nombre del contacto');return;}
+  saveBtn.disabled=true; setStatus('loading');
+  if(editingId){
+    const {error}=await db.from('leads').update(data).eq('id',editingId);
+    if(error){showToast('Error al guardar: '+error.message);saveBtn.disabled=false;return;}
+    showToast('Lead actualizado ✓');
+  } else {
+    const {error}=await db.from('leads').insert(data);
+    if(error){showToast('Error al guardar: '+error.message);saveBtn.disabled=false;return;}
+    showToast('Lead agregado ✓');
+  }
+  saveBtn.disabled=false; await loadData(); closeLeadModal();
+}
+
+async function deleteLead() {
+  if(!confirm('¿Eliminar este lead?')) return;
+  setStatus('loading');
+  const {error}=await db.from('leads').delete().eq('id',editingId);
+  if(error){showToast('Error al eliminar: '+error.message);return;}
+  showToast('Lead eliminado'); closeLeadModal(); await loadData();
+}
+
+function showToast(msg) {
+  const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2800);
+}
+
+document.getElementById('lead-modal-overlay').addEventListener('click',function(e){if(e.target===this)closeLeadModal();});
+document.getElementById('mail-modal-overlay').addEventListener('click',function(e){if(e.target===this)closeMailModal();});
+
+loadData();
+</script>
+</body>
+</html>
