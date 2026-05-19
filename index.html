@@ -3,318 +3,858 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CRM Poncho Digital</title>
+<title>Poncho Digital — CRM</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#F7F6F3;--surface:#fff;--border:#E8E5DF;--border-strong:#D4D0C8;--text:#1A1916;--text-2:#6B6860;--text-3:#9E9B94;--accent:#3C3489;--accent-bg:#EEEDFE;--teal-bg:#E1F5EE;--teal-text:#085041;--red-bg:#FCEBEB;--red-text:#791F1F;--gray-bg:#F1EFE8;--gray-text:#444441}
-*{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
-.login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
-.login-card{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:40px 36px;width:100%;max-width:400px;box-shadow:0 4px 32px rgba(0,0,0,.06)}
-.login-logo{display:flex;align-items:center;gap:10px;margin-bottom:28px}
+:root {
+  --bg: #0E0E10;
+  --surface: #16161A;
+  --surface-2: #1E1E24;
+  --surface-3: #26262E;
+  --border: rgba(255,255,255,0.07);
+  --border-2: rgba(255,255,255,0.12);
+  --text: #F0EFE9;
+  --text-2: #9B9A94;
+  --text-3: #5C5B57;
+  --accent: #C8F065;
+  --accent-dim: rgba(200,240,101,0.12);
+  --accent-dim-2: rgba(200,240,101,0.06);
+  --purple: #8B7FF7;
+  --purple-dim: rgba(139,127,247,0.12);
+  --teal: #4ECDC4;
+  --teal-dim: rgba(78,205,196,0.12);
+  --amber: #FFB84C;
+  --amber-dim: rgba(255,184,76,0.12);
+  --red: #FF6B6B;
+  --red-dim: rgba(255,107,107,0.12);
+  --radius: 14px;
+  --radius-sm: 8px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; overflow-x: hidden; }
+
+/* SCROLLBAR */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--surface-3); border-radius: 2px; }
+
+/* SIDEBAR */
+.sidebar {
+  position: fixed; left: 0; top: 0; bottom: 0; width: 220px;
+  background: var(--surface); border-right: 1px solid var(--border);
+  display: flex; flex-direction: column; z-index: 50;
+  padding: 0 0 20px;
+}
+.sidebar-logo {
+  padding: 24px 20px 20px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 8px;
+}
+.logo-text { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700; color: var(--text); letter-spacing: -0.02em; }
+.logo-sub { font-size: 11px; color: var(--text-3); margin-top: 2px; }
+.sidebar-nav { flex: 1; padding: 8px 12px; display: flex; flex-direction: column; gap: 2px; }
+.nav-item {
+  display: flex; align-items: center; gap: 10px; padding: 9px 10px;
+  border-radius: var(--radius-sm); cursor: pointer; transition: all .15s;
+  font-size: 13px; font-weight: 400; color: var(--text-2); border: none; background: transparent; width: 100%; text-align: left;
+}
+.nav-item:hover { background: var(--surface-2); color: var(--text); }
+.nav-item.active { background: var(--accent-dim); color: var(--accent); }
+.nav-item .ni-icon { font-size: 16px; width: 20px; text-align: center; flex-shrink: 0; }
+.nav-section { font-size: 10px; font-weight: 600; color: var(--text-3); text-transform: uppercase; letter-spacing: .1em; padding: 14px 10px 6px; }
+.sidebar-bottom { padding: 12px; border-top: 1px solid var(--border); }
+.user-row { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: var(--radius-sm); }
+.user-av { width: 28px; height: 28px; border-radius: 50%; background: var(--accent-dim); color: var(--accent); font-size: 11px; font-weight: 600; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.user-name { font-size: 12px; color: var(--text-2); }
+
+/* MAIN */
+.main { margin-left: 220px; min-height: 100vh; }
+.topbar {
+  height: 56px; display: flex; align-items: center; justify-content: space-between;
+  padding: 0 32px; border-bottom: 1px solid var(--border);
+  position: sticky; top: 0; background: rgba(14,14,16,0.8); backdrop-filter: blur(12px); z-index: 40;
+}
+.topbar-title { font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 600; letter-spacing: -0.02em; }
+.topbar-right { display: flex; align-items: center; gap: 8px; }
+.btn { font-family: 'DM Sans', sans-serif; font-size: 12px; font-weight: 500; padding: 7px 14px; border-radius: var(--radius-sm); border: 1px solid var(--border-2); background: transparent; color: var(--text-2); cursor: pointer; transition: all .15s; }
+.btn:hover { background: var(--surface-2); color: var(--text); }
+.btn-accent { background: var(--accent); color: #0E0E10; border-color: var(--accent); font-weight: 600; }
+.btn-accent:hover { background: #d4f570; color: #0E0E10; }
+
+.content { padding: 32px; }
+.page { display: none; }
+.page.active { display: block; animation: fadeIn .2s ease; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+
+/* PAGE HEADER */
+.page-header { margin-bottom: 28px; }
+.page-title { font-family: 'Syne', sans-serif; font-size: 26px; font-weight: 700; letter-spacing: -0.03em; margin-bottom: 4px; }
+.page-sub { font-size: 13px; color: var(--text-2); }
+
+/* METRICS GRID */
+.metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 24px; }
+.met {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 18px 20px;
+  transition: border-color .2s;
+}
+.met:hover { border-color: var(--border-2); }
+.met-label { font-size: 11px; font-weight: 500; color: var(--text-3); text-transform: uppercase; letter-spacing: .08em; margin-bottom: 8px; }
+.met-value { font-family: 'Syne', sans-serif; font-size: 28px; font-weight: 700; letter-spacing: -0.03em; line-height: 1; }
+.met-sub { font-size: 11px; color: var(--text-3); margin-top: 5px; }
+.met-delta { font-size: 11px; font-weight: 500; margin-top: 4px; }
+.met-delta.up { color: var(--accent); }
+.met-delta.down { color: var(--red); }
+
+/* PIPELINE */
+.pipeline { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-bottom: 24px; }
+.pipe-col { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; transition: border-color .15s; }
+.pipe-col:hover { border-color: var(--border-2); }
+.pipe-header { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+.pipe-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.pipe-name { font-size: 11px; font-weight: 500; color: var(--text-3); text-transform: uppercase; letter-spacing: .07em; }
+.pipe-n { font-family: 'Syne', sans-serif; font-size: 28px; font-weight: 700; letter-spacing: -0.03em; }
+.pipe-bar { height: 3px; background: var(--surface-3); border-radius: 2px; margin-top: 8px; }
+.pipe-bar-fill { height: 3px; border-radius: 2px; }
+
+/* GRID 2 */
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+.grid3 { display: grid; grid-template-columns: 2fr 1fr; gap: 16px; margin-bottom: 16px; }
+
+/* CARDS */
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px 22px; }
+.card-title { font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 600; letter-spacing: -0.01em; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between; }
+.card-title-sub { font-size: 11px; color: var(--text-3); font-family: 'DM Sans', sans-serif; font-weight: 400; }
+
+/* LEADS LIST */
+.lead-item {
+  display: flex; align-items: center; gap: 12px; padding: 11px 0;
+  border-bottom: 1px solid var(--border); transition: all .15s; cursor: pointer;
+}
+.lead-item:last-child { border-bottom: none; }
+.lead-item:hover { opacity: .85; }
+.lead-av { width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; flex-shrink: 0; font-family: 'Syne', sans-serif; }
+.lead-info { flex: 1; min-width: 0; }
+.lead-name { font-size: 13px; font-weight: 500; color: var(--text); }
+.lead-org { font-size: 11px; color: var(--text-3); margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lead-right { text-align: right; flex-shrink: 0; }
+.lead-date { font-size: 11px; color: var(--text-3); }
+.lead-action { font-size: 11px; color: var(--text-2); margin-top: 2px; max-width: 130px; text-align: right; }
+
+/* TAGS */
+.tag { font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 20px; letter-spacing: .03em; text-transform: uppercase; }
+.tag-hot { background: var(--red-dim); color: var(--red); }
+.tag-warm { background: var(--amber-dim); color: var(--amber); }
+.tag-cold { background: rgba(139,127,247,0.15); color: var(--purple); }
+.tag-warroom { background: var(--accent-dim); color: var(--accent); }
+.tag-pa { background: var(--teal-dim); color: var(--teal); }
+.tag-etapa { background: var(--surface-3); color: var(--text-2); }
+
+/* OBJETIVOS */
+.obj-item { padding: 14px 0; border-bottom: 1px solid var(--border); }
+.obj-item:last-child { border-bottom: none; }
+.obj-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.obj-label { font-size: 13px; font-weight: 500; color: var(--text); }
+.obj-val { font-size: 12px; color: var(--text-2); }
+.obj-val span { font-weight: 600; color: var(--text); }
+.obj-track { height: 6px; background: var(--surface-3); border-radius: 3px; overflow: hidden; }
+.obj-fill { height: 6px; border-radius: 3px; transition: width .6s cubic-bezier(.4,0,.2,1); }
+.obj-sub { font-size: 11px; color: var(--text-3); margin-top: 5px; }
+
+/* FACTURACIÓN */
+.factura-row { display: flex; align-items: center; justify-content: space-between; padding: 11px 0; border-bottom: 1px solid var(--border); }
+.factura-row:last-child { border-bottom: none; }
+.factura-info { flex: 1; }
+.factura-nombre { font-size: 13px; font-weight: 500; color: var(--text); }
+.factura-fecha { font-size: 11px; color: var(--text-3); margin-top: 2px; }
+.factura-monto { font-family: 'DM Mono', monospace; font-size: 13px; font-weight: 500; text-align: right; }
+.factura-status { font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 20px; text-transform: uppercase; letter-spacing: .03em; margin-top: 3px; text-align: right; }
+.fs-cobrado { background: var(--accent-dim); color: var(--accent); }
+.fs-pendiente { background: var(--amber-dim); color: var(--amber); }
+.fs-vencido { background: var(--red-dim); color: var(--red); }
+
+/* PRODUCTO */
+.prod-hero {
+  border-radius: var(--radius); padding: 28px; margin-bottom: 16px;
+  position: relative; overflow: hidden;
+}
+.prod-hero-warroom { background: linear-gradient(135deg, #1A1F12 0%, #212B10 100%); border: 1px solid rgba(200,240,101,0.2); }
+.prod-hero-pa { background: linear-gradient(135deg, #12181F 0%, #0F1E24 100%); border: 1px solid rgba(78,205,196,0.2); }
+.prod-hero-bg {
+  position: absolute; right: -20px; top: -20px; width: 200px; height: 200px;
+  border-radius: 50%; opacity: .06; filter: blur(40px);
+}
+.prod-hero-bg-ww { background: var(--accent); }
+.prod-hero-bg-pa { background: var(--teal); }
+.prod-badge { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 20px; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 12px; }
+.prod-badge-ww { background: var(--accent-dim); color: var(--accent); border: 1px solid rgba(200,240,101,0.2); }
+.prod-badge-pa { background: var(--teal-dim); color: var(--teal); border: 1px solid rgba(78,205,196,0.2); }
+.prod-status-dot { width: 6px; height: 6px; border-radius: 50%; animation: blink 2s infinite; }
+.prod-status-dot-ww { background: var(--accent); }
+.prod-status-dot-pa { background: var(--teal); }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:.4} }
+.prod-title { font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 700; letter-spacing: -0.03em; margin-bottom: 6px; }
+.prod-desc { font-size: 13px; color: var(--text-2); line-height: 1.6; margin-bottom: 16px; max-width: 500px; }
+.prod-meta { display: flex; gap: 20px; flex-wrap: wrap; }
+.prod-meta-item { display: flex; flex-direction: column; gap: 2px; }
+.prod-meta-label { font-size: 10px; color: var(--text-3); text-transform: uppercase; letter-spacing: .08em; }
+.prod-meta-val { font-size: 13px; font-weight: 500; color: var(--text); }
+
+/* DISCOVERY */
+.discovery-track { margin-top: 16px; }
+.disc-phase { display: flex; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--border); }
+.disc-phase:last-child { border-bottom: none; }
+.disc-num { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; flex-shrink: 0; font-family: 'Syne', sans-serif; }
+.disc-done { background: var(--teal-dim); color: var(--teal); border: 1px solid rgba(78,205,196,0.3); }
+.disc-active { background: var(--amber-dim); color: var(--amber); border: 1px solid rgba(255,184,76,0.3); }
+.disc-todo { background: var(--surface-3); color: var(--text-3); border: 1px solid var(--border); }
+.disc-info { flex: 1; }
+.disc-title { font-size: 13px; font-weight: 500; color: var(--text); margin-bottom: 3px; }
+.disc-desc { font-size: 12px; color: var(--text-3); line-height: 1.5; }
+.disc-right { font-size: 11px; color: var(--text-3); flex-shrink: 0; }
+
+/* FEATURES LIST */
+.feat-list { display: flex; flex-direction: column; gap: 8px; margin-top: 16px; }
+.feat-item { display: flex; align-items: flex-start; gap: 10px; padding: 10px 12px; background: var(--surface-2); border-radius: var(--radius-sm); border: 1px solid var(--border); }
+.feat-check { width: 18px; height: 18px; border-radius: 5px; display: flex; align-items: center; justify-content: center; font-size: 10px; flex-shrink: 0; margin-top: 1px; }
+.feat-check-done { background: var(--accent-dim); color: var(--accent); border: 1px solid rgba(200,240,101,0.3); }
+.feat-check-pending { background: var(--surface-3); color: var(--text-3); border: 1px solid var(--border); }
+.feat-check-wip { background: var(--amber-dim); color: var(--amber); border: 1px solid rgba(255,184,76,0.3); }
+.feat-text { font-size: 12px; color: var(--text-2); flex: 1; line-height: 1.5; }
+.feat-text strong { color: var(--text); font-weight: 500; }
+
+/* REVENUE CHART */
+.rev-chart { display: flex; align-items: flex-end; gap: 6px; height: 80px; margin: 16px 0 8px; }
+.rev-bar-wrap { display: flex; flex-direction: column; align-items: center; gap: 4px; flex: 1; }
+.rev-bar { width: 100%; border-radius: 4px 4px 0 0; transition: opacity .15s; }
+.rev-bar:hover { opacity: .8; }
+.rev-label { font-size: 10px; color: var(--text-3); }
+
+/* ACTIVITY */
+.activity-item { display: flex; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+.activity-item:last-child { border-bottom: none; }
+.activity-icon { width: 30px; height: 30px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 13px; flex-shrink: 0; }
+.activity-info { flex: 1; }
+.activity-title { font-size: 13px; color: var(--text); font-weight: 500; }
+.activity-sub { font-size: 11px; color: var(--text-3); margin-top: 2px; }
+.activity-time { font-size: 11px; color: var(--text-3); flex-shrink: 0; }
+
+/* TOAST */
+.toast { position: fixed; bottom: 22px; right: 22px; background: var(--text); color: var(--bg); font-size: 13px; padding: 9px 16px; border-radius: 8px; z-index: 300; opacity: 0; transform: translateY(8px); transition: all .2s; pointer-events: none; font-weight: 500; }
+.toast.show { opacity: 1; transform: translateY(0); }
+
+@media(max-width:900px){
+  .sidebar{display:none}
+  .main{margin-left:0}
+  .metrics{grid-template-columns:repeat(2,1fr)}
+  .pipeline{grid-template-columns:repeat(3,1fr)}
+  .grid2,.grid3{grid-template-columns:1fr}
+}
+
+/* LOGIN */
+.login-wrap{display:none;min-height:100vh;align-items:center;justify-content:center;padding:20px;background:var(--bg)}
+.login-wrap.visible{display:flex}
+.login-card{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:44px 40px;width:100%;max-width:400px;box-shadow:0 0 80px rgba(200,240,101,0.04)}
+.login-logo{display:flex;align-items:center;gap:10px;margin-bottom:32px}
 .login-logo-dot{width:10px;height:10px;background:var(--accent);border-radius:50%}
-.login-logo-text{font-size:15px;font-weight:600}
-.login-title{font-size:22px;font-weight:500;margin-bottom:6px}
-.login-sub{font-size:13px;color:var(--text-3);margin-bottom:28px}
-.login-group{display:flex;flex-direction:column;gap:5px;margin-bottom:14px}
-.login-group label{font-size:11px;font-weight:500;color:var(--text-3);text-transform:uppercase;letter-spacing:.07em}
-.login-group input{font-family:'DM Sans',sans-serif;font-size:14px;padding:10px 12px;border:1px solid var(--border-strong);border-radius:10px;background:var(--bg);color:var(--text);outline:none;transition:border-color .15s}
-.login-group input:focus{border-color:var(--accent);background:var(--surface)}
-.login-btn{width:100%;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;padding:11px;border-radius:10px;border:none;background:var(--accent);color:#fff;cursor:pointer;margin-top:8px;transition:background .15s}
-.login-btn:hover{background:#2d2670}
-.login-btn:disabled{opacity:.6;cursor:not-allowed}
-.login-error{font-size:12px;color:var(--red-text);background:var(--red-bg);padding:9px 12px;border-radius:8px;margin-top:12px;display:none}
-.app{display:none}
-.header{background:var(--surface);border-bottom:1px solid var(--border);padding:0 28px;display:flex;align-items:center;justify-content:space-between;height:54px;position:sticky;top:0;z-index:100}
-.logo{font-size:14px;font-weight:600;display:flex;align-items:center;gap:8px}
-.logo-dot{width:8px;height:8px;background:var(--accent);border-radius:50%}
-.header-right{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-.user-pill{font-size:11px;color:var(--text-3);background:var(--bg);border:1px solid var(--border);border-radius:20px;padding:4px 10px;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.status{font-size:11px;color:var(--text-3);display:flex;align-items:center;gap:5px}
-.status-dot{width:6px;height:6px;border-radius:50%;background:#ccc}
-.status-dot.ok{background:#1D9E75}
-.status-dot.loading{background:#EF9F27;animation:pulse 1s infinite}
-.status-dot.error{background:#E24B4A}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
-.btn{font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;padding:7px 14px;border-radius:8px;border:1px solid var(--border-strong);background:var(--surface);color:var(--text-2);cursor:pointer;transition:all .15s}
-.btn:hover{background:var(--bg)}
-.btn:disabled{opacity:.5;cursor:not-allowed}
-.btn-primary{background:var(--accent);color:#fff;border-color:var(--accent)}
-.btn-primary:hover{background:#2d2670}
-.btn-sm{font-size:12px;padding:5px 11px;border-radius:7px}
-.btn-logout{font-family:'DM Sans',sans-serif;font-size:12px;padding:4px 10px;border-radius:7px;border:1px solid var(--border-strong);background:transparent;color:var(--text-3);cursor:pointer;transition:all .15s}
-.btn-logout:hover{color:var(--red-text);border-color:var(--red-bg);background:var(--red-bg)}
-.container{max-width:1080px;margin:0 auto;padding:24px 20px}
-.alert-bar{background:#FFF8EC;border-bottom:1px solid #F5D78E;padding:10px 28px;display:flex;align-items:center;justify-content:space-between;gap:12px}
-.alert-bar.hidden{display:none}
-.alert-content{display:flex;align-items:flex-start;gap:10px;flex:1}
-.alert-icon{font-size:16px;flex-shrink:0;margin-top:1px}
-.alert-text{font-size:13px;color:#633806;font-weight:500;margin-bottom:4px}
-.alert-tasks{display:flex;gap:6px;flex-wrap:wrap}
-.alert-task{font-size:11px;background:#FAEEDA;color:#633806;padding:2px 8px;border-radius:10px;font-weight:500}
-.alert-task.vencida{background:#FCEBEB;color:#791F1F}
-.alert-close{background:none;border:none;color:var(--text-3);cursor:pointer;font-size:18px;flex-shrink:0;line-height:1}
-.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px}
-.met{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px}
-.met-l{font-size:11px;font-weight:500;color:var(--text-3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:5px}
-.met-v{font-size:26px;font-weight:300}
-.pipeline{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:20px}
-.pipe-col{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:11px 13px}
-.pipe-header{display:flex;align-items:center;gap:6px;margin-bottom:6px}
-.pipe-dot{width:7px;height:7px;border-radius:50%}
-.pipe-label{font-size:10px;font-weight:500;color:var(--text-3);text-transform:uppercase;letter-spacing:.06em}
-.pipe-n{font-size:22px;font-weight:300}
-.toolbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:10px;flex-wrap:wrap}
-.filters{display:flex;gap:5px;flex-wrap:wrap}
-.fb{font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;padding:5px 11px;border-radius:20px;border:1px solid var(--border-strong);background:transparent;color:var(--text-2);cursor:pointer;transition:all .15s}
-.fb:hover{background:var(--bg)}
-.fb.active{background:var(--accent);color:#fff;border-color:var(--accent)}
-.search-wrap{position:relative}
-.search-wrap input{font-family:'DM Sans',sans-serif;font-size:13px;padding:7px 11px 7px 30px;border:1px solid var(--border-strong);border-radius:8px;background:var(--surface);color:var(--text);width:190px;outline:none}
-.search-wrap input:focus{border-color:var(--accent)}
-.search-icon{position:absolute;left:9px;top:50%;transform:translateY(-50%);color:var(--text-3);font-size:13px}
-.cards-list{display:flex;flex-direction:column;gap:7px}
-.card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:13px 16px;display:flex;align-items:flex-start;gap:13px;transition:border-color .15s,box-shadow .15s}
-.card:hover{border-color:var(--border-strong);box-shadow:0 2px 10px rgba(0,0,0,.05)}
-.card.urgent{border-left:3px solid #E24B4A}
-.card.today{border-left:3px solid #EF9F27}
-.av{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;flex-shrink:0;margin-top:1px}
-.card-info{flex:1;min-width:0}
-.card-name{font-size:14px;font-weight:500}
-.card-org{font-size:12px;color:var(--text-2);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.card-tags{display:flex;gap:5px;flex-wrap:wrap;margin-top:6px}
-.tag{font-size:11px;font-weight:500;padding:2px 8px;border-radius:20px}
-.card-right{text-align:right;flex-shrink:0;min-width:150px}
-.card-fecha{font-size:12px;font-weight:500;color:var(--text-2)}
-.card-accion{font-size:11px;color:var(--text-3);margin-top:3px;line-height:1.4}
-.card-actions{display:flex;gap:5px;margin-top:8px;justify-content:flex-end;flex-wrap:wrap}
-.card-btn{font-family:'DM Sans',sans-serif;font-size:11px;padding:4px 9px;border-radius:6px;border:1px solid var(--border-strong);background:transparent;color:var(--text-2);cursor:pointer;transition:all .15s}
-.card-btn:hover{background:var(--bg)}
-.card-btn.edit{color:var(--accent);border-color:var(--accent-bg);background:var(--accent-bg)}
-.card-btn.mail{color:var(--teal-text);border-color:var(--teal-bg);background:var(--teal-bg)}
-.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:200;align-items:center;justify-content:center}
-.modal-overlay.open{display:flex}
-.modal{background:var(--surface);border-radius:16px;width:100%;max-width:520px;padding:26px;box-shadow:0 8px 40px rgba(0,0,0,.12);margin:16px;max-height:90vh;overflow-y:auto}
-.modal-title{font-size:16px;font-weight:600;margin-bottom:18px}
-.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.form-group{display:flex;flex-direction:column;gap:4px}
-.form-group.full{grid-column:1/-1}
-.form-group label{font-size:11px;font-weight:500;color:var(--text-3);text-transform:uppercase;letter-spacing:.07em}
-.form-group input,.form-group select,.form-group textarea{font-family:'DM Sans',sans-serif;font-size:13px;padding:8px 10px;border:1px solid var(--border-strong);border-radius:8px;background:var(--bg);color:var(--text);outline:none;transition:border-color .15s}
-.form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:var(--accent);background:var(--surface)}
-.form-group textarea{resize:vertical;min-height:65px}
-.modal-footer{display:flex;justify-content:flex-end;gap:8px;margin-top:18px}
-.btn-danger{color:#791F1F;border-color:#F7C1C1;background:#FCEBEB}
-.btn-danger:hover{background:#F7C1C1}
-.mail-modal{max-width:600px}
-.mail-type-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px}
-.mail-type-btn{padding:10px 8px;border-radius:10px;border:1px solid var(--border-strong);background:transparent;cursor:pointer;text-align:center;transition:all .15s;font-family:'DM Sans',sans-serif}
-.mail-type-btn:hover{background:var(--bg)}
-.mail-type-btn.selected{border-color:var(--accent);background:var(--accent-bg)}
-.mt-icon{font-size:20px;margin-bottom:4px}
-.mt-label{font-size:12px;font-weight:500;color:var(--text);display:block}
-.mt-desc{font-size:10px;color:var(--text-3);display:block;margin-top:1px}
-.mail-context label{font-size:11px;font-weight:500;color:var(--text-3);text-transform:uppercase;letter-spacing:.07em;display:block;margin-bottom:5px}
-.mail-context textarea{width:100%;font-family:'DM Sans',sans-serif;font-size:13px;padding:9px 11px;border:1px solid var(--border-strong);border-radius:8px;background:var(--bg);color:var(--text);outline:none;resize:vertical;min-height:70px;margin-bottom:14px}
-.mail-context textarea:focus{border-color:var(--accent);background:var(--surface)}
-.mail-result{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:14px;margin-top:14px;display:none}
-.mail-result-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
-.mail-result-title{font-size:12px;font-weight:500;color:var(--text-3);text-transform:uppercase;letter-spacing:.06em}
-.mail-copy-btn{font-family:'DM Sans',sans-serif;font-size:12px;padding:4px 10px;border-radius:6px;border:1px solid var(--border-strong);background:var(--surface);color:var(--text-2);cursor:pointer}
-.mail-copy-btn:hover{background:var(--border)}
-.mail-subject{font-size:13px;font-weight:600;color:var(--text);margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid var(--border)}
-.mail-body{font-size:13px;color:var(--text-2);line-height:1.7;white-space:pre-wrap}
-.mail-loading{text-align:center;padding:24px;color:var(--text-3);font-size:13px;display:none}
-.spinner{display:inline-block;width:16px;height:16px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;margin-right:8px;vertical-align:middle}
-@keyframes spin{to{transform:rotate(360deg)}}
-.empty{text-align:center;padding:48px;color:var(--text-3);font-size:14px}
-.page-loader{text-align:center;padding:60px;color:var(--text-3);font-size:13px}
-.toast{position:fixed;bottom:22px;right:22px;background:var(--text);color:#fff;font-size:13px;padding:9px 16px;border-radius:8px;z-index:300;opacity:0;transform:translateY(8px);transition:all .2s;pointer-events:none;max-width:300px}
-.toast.show{opacity:1;transform:translateY(0)}
-@media(max-width:680px){.metrics{grid-template-columns:repeat(2,1fr)}.pipeline{grid-template-columns:repeat(3,1fr)}.form-grid,.mail-type-grid{grid-template-columns:1fr 1fr}.card{flex-wrap:wrap}.card-right{min-width:unset;text-align:left;width:100%}.card-actions{justify-content:flex-start}}
+.login-logo-text{font-family:'Syne',sans-serif;font-size:16px;font-weight:700;letter-spacing:-0.02em}
+.login-title{font-family:'Syne',sans-serif;font-size:24px;font-weight:700;letter-spacing:-0.03em;margin-bottom:6px}
+.login-sub{font-size:13px;color:var(--text-3);margin-bottom:32px;line-height:1.5}
+.login-group{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
+.login-group label{font-size:11px;font-weight:500;color:var(--text-3);text-transform:uppercase;letter-spacing:.08em}
+.login-group input{font-family:'DM Sans',sans-serif;font-size:14px;padding:11px 14px;border:1px solid var(--border-2);border-radius:10px;background:var(--surface-2);color:var(--text);outline:none;transition:border-color .15s}
+.login-group input:focus{border-color:var(--accent);background:var(--surface-3)}
+.login-group input::placeholder{color:var(--text-3)}
+.login-btn{width:100%;font-family:'Syne',sans-serif;font-size:14px;font-weight:700;padding:12px;border-radius:10px;border:none;background:var(--accent);color:#0E0E10;cursor:pointer;margin-top:8px;transition:all .15s;letter-spacing:-0.01em}
+.login-btn:hover{background:#d4f570;transform:translateY(-1px)}
+.login-btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.login-error{font-size:12px;color:var(--red);background:var(--red-dim);padding:10px 14px;border-radius:8px;margin-top:12px;display:none;border:1px solid rgba(255,107,107,0.2)}
+
 </style>
 </head>
 <body>
 
-<div class="login-wrap" id="login-wrap">
+
+<!-- LOGIN -->
+<div class="login-wrap visible" id="login-wrap">
   <div class="login-card">
-    <div class="login-logo"><div class="login-logo-dot"></div><span class="login-logo-text">Poncho Digital — CRM</span></div>
+    <div class="login-logo"><div class="login-logo-dot"></div><span class="login-logo-text">Poncho Digital</span></div>
     <div class="login-title">Bienvenido</div>
-    <div class="login-sub">Ingresá con tu cuenta para continuar</div>
+    <div class="login-sub">Ingresá con tu cuenta para acceder al CRM y gestión de producto</div>
     <div class="login-group"><label>Email</label><input type="email" id="login-email" placeholder="tu@email.com" onkeydown="if(event.key==='Enter')doLogin()"></div>
     <div class="login-group"><label>Contraseña</label><input type="password" id="login-pass" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"></div>
-    <button class="login-btn" id="login-btn" onclick="doLogin()">Ingresar</button>
+    <button class="login-btn" id="login-btn" onclick="doLogin()">Ingresar →</button>
     <div class="login-error" id="login-error"></div>
   </div>
 </div>
 
-<div class="app" id="app">
-  <div class="header">
-    <div class="logo"><div class="logo-dot"></div>Poncho Digital — CRM</div>
-    <div class="header-right">
-      <div class="status"><div class="status-dot ok" id="status-dot"></div><span id="status-txt">Sincronizado</span></div>
-      <div class="user-pill" id="user-email-display"></div>
-      <button class="btn btn-sm" onclick="checkTodayTasks()">📋 Hoy</button>
-      <button class="btn btn-primary btn-sm" onclick="openLeadModal(null)">+ Lead</button>
-      <button class="btn-logout" onclick="doLogout()">Salir</button>
+<div class="sidebar" id="app-layout" style="display:none">
+  <div class="sidebar-logo">
+    <div class="logo-text">Poncho Digital</div>
+    <div class="logo-sub">CRM & Producto</div>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-section">Principal</div>
+    <button class="nav-item active" onclick="showPage('dashboard',this)"><span class="ni-icon">⚡</span>Dashboard</button>
+    <button class="nav-item" onclick="showPage('leads',this)"><span class="ni-icon">👥</span>Leads</button>
+    <button class="nav-item" onclick="showPage('facturacion',this)"><span class="ni-icon">💰</span>Facturación</button>
+    <button class="nav-item" onclick="showPage('objetivos',this)"><span class="ni-icon">🎯</span>Objetivos</button>
+    <div class="nav-section">Producto</div>
+    <button class="nav-item" onclick="showPage('warroom',this)"><span class="ni-icon">🗡️</span>Warroom</button>
+    <button class="nav-item" onclick="showPage('publicaffairs',this)"><span class="ni-icon">🔍</span>Public Affairs</button>
+  </nav>
+  <div class="sidebar-bottom">
+    <div class="user-row" style="cursor:pointer" onclick="doLogout()" title="Cerrar sesión">
+      <div class="user-av">GG</div>
+      <div class="user-name">gonzalo@poncho.ar</div>
     </div>
   </div>
-  <div class="alert-bar hidden" id="alert-bar">
-    <div class="alert-content"><span class="alert-icon">⚡</span><div><div class="alert-text" id="alert-text"></div><div class="alert-tasks" id="alert-tasks"></div></div></div>
-    <button class="alert-close" onclick="document.getElementById('alert-bar').classList.add('hidden')">✕</button>
+</div>
+
+<div class="main" id="app-main" style="display:none">
+  <div class="topbar">
+    <div class="topbar-title" id="topbar-title">Dashboard</div>
+    <div class="topbar-right">
+      <button class="btn" onclick="showToast('Resumen semanal generado ✓')">📋 Resumen</button>
+      <button class="btn btn-accent" onclick="showToast('+ Nuevo lead agregado')">+ Nuevo lead</button>
+    </div>
   </div>
-  <div class="container">
-    <div class="metrics" id="metrics"><div class="page-loader">Cargando...</div></div>
-    <div class="pipeline" id="pipeline"></div>
-    <div class="toolbar">
-      <div class="filters">
-        <button class="fb active" onclick="setFilter('todos',this)">Todos</button>
-        <button class="fb" onclick="setFilter('warroom',this)">Warroom</button>
-        <button class="fb" onclick="setFilter('public_affairs',this)">Public Affairs</button>
-        <button class="fb" onclick="setFilter('hot',this)">🔴 Hot</button>
-        <button class="fb" onclick="setFilter('warm',this)">🟡 Warm</button>
-        <button class="fb" onclick="setFilter('hoy',this)">📅 Hoy</button>
+
+  <div class="content">
+
+    <!-- DASHBOARD -->
+    <div class="page active" id="page-dashboard">
+      <div class="page-header">
+        <div class="page-title">Buenos días, Gonzalo 👋</div>
+        <div class="page-sub">Martes 19 de mayo · 3 tareas urgentes hoy</div>
       </div>
-      <div class="search-wrap"><span class="search-icon">🔍</span><input type="text" placeholder="Buscar..." id="search" oninput="renderCards()"></div>
-    </div>
-    <div class="cards-list" id="cards"><div class="page-loader">Cargando leads...</div></div>
-  </div>
-</div>
 
-<div class="modal-overlay" id="lead-modal-overlay">
-  <div class="modal">
-    <div class="modal-title" id="lead-modal-title">Nuevo lead</div>
-    <div class="form-grid">
-      <div class="form-group full"><label>Nombre completo</label><input type="text" id="f-nombre" placeholder="Nombre y apellido"></div>
-      <div class="form-group"><label>Organización</label><input type="text" id="f-org" placeholder="Empresa / Partido"></div>
-      <div class="form-group"><label>Cargo / Rol</label><input type="text" id="f-rol" placeholder="Cargo o función"></div>
-      <div class="form-group"><label>Email</label><input type="email" id="f-email" placeholder="mail@dominio.com"></div>
-      <div class="form-group"><label>Producto</label><select id="f-producto"><option value="warroom">Warroom</option><option value="public_affairs">Public Affairs</option></select></div>
-      <div class="form-group"><label>Etapa</label><select id="f-etapa"><option>Prospecto</option><option>Contactado</option><option>Demo</option><option>Propuesta</option><option>Cierre</option></select></div>
-      <div class="form-group"><label>Temperatura</label><select id="f-temp"><option value="hot">🔴 Hot</option><option value="warm">🟡 Warm</option><option value="cold">🔵 Cold</option></select></div>
-      <div class="form-group"><label>Canal</label><select id="f-canal"><option>WhatsApp</option><option>Mail</option><option>LinkedIn</option><option>Reunión</option><option>Mixto</option></select></div>
-      <div class="form-group full"><label>Próxima acción</label><input type="text" id="f-accion" placeholder="Qué tenés que hacer"></div>
-      <div class="form-group"><label>Fecha próxima acción</label><input type="date" id="f-fecha"></div>
-      <div class="form-group"><label>Monto estimado (USD)</label><input type="number" id="f-monto" placeholder="0"></div>
-      <div class="form-group full"><label>Notas</label><textarea id="f-notas" placeholder="Contexto, historial, detalles..."></textarea></div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-danger" id="btn-delete" onclick="deleteLead()" style="display:none">Eliminar</button>
-      <button class="btn" onclick="closeLeadModal()">Cancelar</button>
-      <button class="btn btn-primary" id="btn-save-lead" onclick="saveLead()">Guardar</button>
-    </div>
-  </div>
-</div>
+      <div class="metrics">
+        <div class="met">
+          <div class="met-label">Leads activos</div>
+          <div class="met-value">6</div>
+          <div class="met-delta up">↑ 2 este mes</div>
+        </div>
+        <div class="met">
+          <div class="met-label">Revenue mayo</div>
+          <div class="met-value" style="color:var(--accent)">$4.2k</div>
+          <div class="met-delta up">↑ 68% obj.</div>
+        </div>
+        <div class="met">
+          <div class="met-label">Por cobrar</div>
+          <div class="met-value" style="color:var(--amber)">$2.8k</div>
+          <div class="met-sub">3 facturas pendientes</div>
+        </div>
+        <div class="met">
+          <div class="met-label">Tasa cierre</div>
+          <div class="met-value" style="color:var(--purple)">33%</div>
+          <div class="met-delta up">↑ vs mes anterior</div>
+        </div>
+      </div>
 
-<div class="modal-overlay" id="mail-modal-overlay">
-  <div class="modal mail-modal">
-    <div class="modal-title">✉️ Mail para <span id="mail-lead-name" style="color:var(--accent)"></span></div>
-    <div class="mail-type-grid">
-      <button class="mail-type-btn selected" onclick="selectMailType(this,'primer_contacto')"><div class="mt-icon">👋</div><span class="mt-label">Primer contacto</span><span class="mt-desc">Presentación</span></button>
-      <button class="mail-type-btn" onclick="selectMailType(this,'follow_up')"><div class="mt-icon">🔄</div><span class="mt-label">Follow-up</span><span class="mt-desc">Sin respuesta</span></button>
-      <button class="mail-type-btn" onclick="selectMailType(this,'propuesta')"><div class="mt-icon">📄</div><span class="mt-label">Propuesta</span><span class="mt-desc">Envío propuesta</span></button>
-      <button class="mail-type-btn" onclick="selectMailType(this,'demo')"><div class="mt-icon">🖥️</div><span class="mt-label">Agendar demo</span><span class="mt-desc">Reunión demo</span></button>
-      <button class="mail-type-btn" onclick="selectMailType(this,'cierre')"><div class="mt-icon">🤝</div><span class="mt-label">Cierre</span><span class="mt-desc">Avanzar contrato</span></button>
-      <button class="mail-type-btn" onclick="selectMailType(this,'custom')"><div class="mt-icon">✏️</div><span class="mt-label">Personalizado</span><span class="mt-desc">Describí vos</span></button>
+      <div class="pipeline">
+        <div class="pipe-col">
+          <div class="pipe-header"><div class="pipe-dot" style="background:#5C5B57"></div><div class="pipe-name">Prospecto</div></div>
+          <div class="pipe-n">3</div>
+          <div class="pipe-bar"><div class="pipe-bar-fill" style="width:50%;background:#5C5B57"></div></div>
+        </div>
+        <div class="pipe-col">
+          <div class="pipe-header"><div class="pipe-dot" style="background:var(--purple)"></div><div class="pipe-name">Contactado</div></div>
+          <div class="pipe-n">3</div>
+          <div class="pipe-bar"><div class="pipe-bar-fill" style="width:50%;background:var(--purple)"></div></div>
+        </div>
+        <div class="pipe-col">
+          <div class="pipe-header"><div class="pipe-dot" style="background:var(--amber)"></div><div class="pipe-name">Demo</div></div>
+          <div class="pipe-n">1</div>
+          <div class="pipe-bar"><div class="pipe-bar-fill" style="width:17%;background:var(--amber)"></div></div>
+        </div>
+        <div class="pipe-col">
+          <div class="pipe-header"><div class="pipe-dot" style="background:var(--teal)"></div><div class="pipe-name">Propuesta</div></div>
+          <div class="pipe-n">0</div>
+          <div class="pipe-bar"><div class="pipe-bar-fill" style="width:0%;background:var(--teal)"></div></div>
+        </div>
+        <div class="pipe-col">
+          <div class="pipe-header"><div class="pipe-dot" style="background:var(--accent)"></div><div class="pipe-name">Cierre</div></div>
+          <div class="pipe-n">1</div>
+          <div class="pipe-bar"><div class="pipe-bar-fill" style="width:17%;background:var(--accent)"></div></div>
+        </div>
+      </div>
+
+      <div class="grid3">
+        <div class="card">
+          <div class="card-title">Seguimientos urgentes <span class="card-title-sub">hoy</span></div>
+          <div class="lead-item">
+            <div class="lead-av" style="background:rgba(255,107,107,0.12);color:#FF6B6B">AN</div>
+            <div class="lead-info">
+              <div class="lead-name">Agustín Neme</div>
+              <div class="lead-org">Partido Gral. Pueyrredon</div>
+              <div style="margin-top:5px;display:flex;gap:5px"><span class="tag tag-hot">Hot</span><span class="tag tag-warroom">Warroom</span></div>
+            </div>
+            <div class="lead-right">
+              <div class="lead-date">Hoy</div>
+              <div class="lead-action">Demo pendiente</div>
+            </div>
+          </div>
+          <div class="lead-item">
+            <div class="lead-av" style="background:rgba(255,107,107,0.12);color:#FF6B6B">PV</div>
+            <div class="lead-info">
+              <div class="lead-name">Pablo Verdecchia</div>
+              <div class="lead-org">Equipo Capozzi — Río Negro</div>
+              <div style="margin-top:5px;display:flex;gap:5px"><span class="tag tag-hot">Hot</span><span class="tag tag-warroom">Warroom</span></div>
+            </div>
+            <div class="lead-right">
+              <div class="lead-date">Vencida</div>
+              <div class="lead-action">Enviar propuesta</div>
+            </div>
+          </div>
+          <div class="lead-item">
+            <div class="lead-av" style="background:rgba(78,205,196,0.12);color:#4ECDC4">AJ</div>
+            <div class="lead-info">
+              <div class="lead-name">Agustina Jefremov</div>
+              <div class="lead-org">AES Energía</div>
+              <div style="margin-top:5px;display:flex;gap:5px"><span class="tag tag-warm">Warm</span><span class="tag tag-pa">Public Affairs</span></div>
+            </div>
+            <div class="lead-right">
+              <div class="lead-date">Mañana</div>
+              <div class="lead-action">Primer contacto</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Revenue mensual</div>
+          <div class="rev-chart" id="rev-chart"></div>
+          <div style="display:flex;justify-content:space-between">
+            <span style="font-size:10px;color:var(--text-3)">Ene</span>
+            <span style="font-size:10px;color:var(--text-3)">Feb</span>
+            <span style="font-size:10px;color:var(--text-3)">Mar</span>
+            <span style="font-size:10px;color:var(--text-3)">Abr</span>
+            <span style="font-size:10px;color:var(--text-3)">May</span>
+          </div>
+          <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
+            <div>
+              <div style="font-size:11px;color:var(--text-3)">Objetivo mayo</div>
+              <div style="font-size:18px;font-family:'Syne',sans-serif;font-weight:700;color:var(--accent)">$6.200</div>
+            </div>
+            <div style="text-align:right">
+              <div style="font-size:11px;color:var(--text-3)">Alcanzado</div>
+              <div style="font-size:18px;font-family:'Syne',sans-serif;font-weight:700">$4.200</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Actividad reciente</div>
+        <div class="activity-item">
+          <div class="activity-icon" style="background:var(--accent-dim)">✉️</div>
+          <div class="activity-info"><div class="activity-title">Mail enviado — Lucas Palatnik</div><div class="activity-sub">Demo de Warroom agendada para el 27 may</div></div>
+          <div class="activity-time">Hace 2h</div>
+        </div>
+        <div class="activity-item">
+          <div class="activity-icon" style="background:var(--purple-dim)">🤝</div>
+          <div class="activity-info"><div class="activity-title">Cierre confirmado — Municipalidad Gral. Paz</div><div class="activity-sub">Warroom — USD 2.400/año. Factura emitida.</div></div>
+          <div class="activity-time">Ayer</div>
+        </div>
+        <div class="activity-item">
+          <div class="activity-icon" style="background:var(--teal-dim)">🔍</div>
+          <div class="activity-info"><div class="activity-title">Entrevista discovery — Juan Orlando</div><div class="activity-sub">Cefeidas Group · Public Affairs · 45 min</div></div>
+          <div class="activity-time">17 may</div>
+        </div>
+        <div class="activity-item">
+          <div class="activity-icon" style="background:var(--amber-dim)">📞</div>
+          <div class="activity-info"><div class="activity-title">Llamada — Federico Roveillard</div><div class="activity-sub">DOW · Sin respuesta · Intentar por mail</div></div>
+          <div class="activity-time">15 may</div>
+        </div>
+      </div>
     </div>
-    <div class="mail-context"><label>Contexto adicional (opcional)</label><textarea id="mail-context-input" placeholder="Ej: nos vimos en el evento X, el precio es $Y..."></textarea></div>
-    <div class="mail-loading" id="mail-loading"><span class="spinner"></span>Generando mail con IA...</div>
-    <div class="mail-result" id="mail-result">
-      <div class="mail-result-header"><span class="mail-result-title">Mail generado</span><button class="mail-copy-btn" onclick="copyMail()">📋 Copiar todo</button></div>
-      <div class="mail-subject" id="mail-subject-display"></div>
-      <div class="mail-body" id="mail-body-display"></div>
+
+    <!-- LEADS -->
+    <div class="page" id="page-leads">
+      <div class="page-header">
+        <div class="page-title">Pipeline de leads</div>
+        <div class="page-sub">6 contactos activos · 2 productos</div>
+      </div>
+      <div class="card">
+        <div class="card-title">Todos los leads</div>
+        <div class="lead-item">
+          <div class="lead-av" style="background:rgba(255,107,107,0.12);color:#FF6B6B">AN</div>
+          <div class="lead-info"><div class="lead-name">Agustín Neme</div><div class="lead-org">Partido Gral. Pueyrredon — Mar del Plata</div><div style="margin-top:5px;display:flex;gap:5px"><span class="tag tag-hot">Hot</span><span class="tag tag-warroom">Warroom</span><span class="tag tag-etapa">Contactado</span></div></div>
+          <div class="lead-right"><div class="lead-date">25 may</div><div class="lead-action">Demo de la plataforma</div></div>
+        </div>
+        <div class="lead-item">
+          <div class="lead-av" style="background:rgba(255,107,107,0.12);color:#FF6B6B">PV</div>
+          <div class="lead-info"><div class="lead-name">Pablo Verdecchia</div><div class="lead-org">Equipo Capozzi — Río Negro</div><div style="margin-top:5px;display:flex;gap:5px"><span class="tag tag-hot">Hot</span><span class="tag tag-warroom">Warroom</span><span class="tag tag-etapa">Contactado</span></div></div>
+          <div class="lead-right"><div class="lead-date" style="color:var(--red)">Vencida</div><div class="lead-action">Enviar propuesta</div></div>
+        </div>
+        <div class="lead-item">
+          <div class="lead-av" style="background:rgba(139,127,247,0.12);color:#8B7FF7">LP</div>
+          <div class="lead-info"><div class="lead-name">Lucas Palatnik</div><div class="lead-org">Equipo Bullrich — Senadora CABA</div><div style="margin-top:5px;display:flex;gap:5px"><span class="tag tag-warm">Warm</span><span class="tag tag-warroom">Warroom</span><span class="tag tag-etapa">Contactado</span></div></div>
+          <div class="lead-right"><div class="lead-date">27 may</div><div class="lead-action">Agendar demo</div></div>
+        </div>
+        <div class="lead-item">
+          <div class="lead-av" style="background:rgba(78,205,196,0.12);color:#4ECDC4">AJ</div>
+          <div class="lead-info"><div class="lead-name">Agustina Jefremov</div><div class="lead-org">AES Energía</div><div style="margin-top:5px;display:flex;gap:5px"><span class="tag tag-warm">Warm</span><span class="tag tag-pa">Public Affairs</span><span class="tag tag-etapa">Prospecto</span></div></div>
+          <div class="lead-right"><div class="lead-date">26 may</div><div class="lead-action">Primer contacto</div></div>
+        </div>
+        <div class="lead-item">
+          <div class="lead-av" style="background:rgba(78,205,196,0.12);color:#4ECDC4">JO</div>
+          <div class="lead-info"><div class="lead-name">Juan Ignacio Orlando</div><div class="lead-org">Cefeidas Group</div><div style="margin-top:5px;display:flex;gap:5px"><span class="tag tag-warm">Warm</span><span class="tag tag-pa">Public Affairs</span><span class="tag tag-etapa">Prospecto</span></div></div>
+          <div class="lead-right"><div class="lead-date">28 may</div><div class="lead-action">Enviar deck</div></div>
+        </div>
+        <div class="lead-item">
+          <div class="lead-av" style="background:rgba(139,127,247,0.12);color:#8B7FF7">FR</div>
+          <div class="lead-info"><div class="lead-name">Federico Roveillard</div><div class="lead-org">DOW</div><div style="margin-top:5px;display:flex;gap:5px"><span class="tag tag-cold">Cold</span><span class="tag tag-pa">Public Affairs</span><span class="tag tag-etapa">Prospecto</span></div></div>
+          <div class="lead-right"><div class="lead-date">2 jun</div><div class="lead-action">Follow-up</div></div>
+        </div>
+      </div>
     </div>
-    <div class="modal-footer">
-      <button class="btn" onclick="closeMailModal()">Cerrar</button>
-      <button class="btn btn-primary" id="btn-gen-mail" onclick="generateMail()">✨ Generar mail</button>
+
+    <!-- FACTURACIÓN -->
+    <div class="page" id="page-facturacion">
+      <div class="page-header">
+        <div class="page-title">Facturación</div>
+        <div class="page-sub">Revenue real y proyectado por cliente</div>
+      </div>
+      <div class="metrics">
+        <div class="met">
+          <div class="met-label">Cobrado mayo</div>
+          <div class="met-value" style="color:var(--accent)">$2.400</div>
+          <div class="met-sub">1 factura cobrada</div>
+        </div>
+        <div class="met">
+          <div class="met-label">Por cobrar</div>
+          <div class="met-value" style="color:var(--amber)">$2.800</div>
+          <div class="met-sub">3 facturas pendientes</div>
+        </div>
+        <div class="met">
+          <div class="met-label">Vencido</div>
+          <div class="met-value" style="color:var(--red)">$600</div>
+          <div class="met-sub">1 factura vencida</div>
+        </div>
+        <div class="met">
+          <div class="met-label">ARR proyectado</div>
+          <div class="met-value" style="color:var(--purple)">$38k</div>
+          <div class="met-delta up">↑ pipeline actual</div>
+        </div>
+      </div>
+      <div class="grid2">
+        <div class="card">
+          <div class="card-title">Facturas mayo 2026</div>
+          <div class="factura-row">
+            <div class="factura-info"><div class="factura-nombre">Municipalidad Gral. Paz — Warroom</div><div class="factura-fecha">Emitida 15 may · anual</div></div>
+            <div><div class="factura-monto" style="color:var(--accent)">USD 2.400</div><div class="factura-status fs-cobrado">Cobrado</div></div>
+          </div>
+          <div class="factura-row">
+            <div class="factura-info"><div class="factura-nombre">Remax Belgrano — Capacitación IA</div><div class="factura-fecha">Vence 22 may</div></div>
+            <div><div class="factura-monto" style="color:var(--amber)">$350.000</div><div class="factura-status fs-pendiente">Pendiente</div></div>
+          </div>
+          <div class="factura-row">
+            <div class="factura-info"><div class="factura-nombre">SH Podcast — Pauta Brand X</div><div class="factura-fecha">Vence 1 jun</div></div>
+            <div><div class="factura-monto" style="color:var(--amber)">$880.000</div><div class="factura-status fs-pendiente">Pendiente</div></div>
+          </div>
+          <div class="factura-row">
+            <div class="factura-info"><div class="factura-nombre">MDP — Podcast</div><div class="factura-fecha">Venció 10 may</div></div>
+            <div><div class="factura-monto" style="color:var(--red)">$350.000</div><div class="factura-status fs-vencido">Vencida</div></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">Revenue por producto</div>
+          <div class="obj-item">
+            <div class="obj-header"><div class="obj-label">🗡️ Warroom</div><div class="obj-val">USD <span>2.400</span> / 5.000</div></div>
+            <div class="obj-track"><div class="obj-fill" style="width:48%;background:var(--accent)"></div></div>
+            <div class="obj-sub">1 cliente activo · ARR USD 2.400</div>
+          </div>
+          <div class="obj-item">
+            <div class="obj-header"><div class="obj-label">🔍 Public Affairs</div><div class="obj-val">USD <span>0</span> / 3.000</div></div>
+            <div class="obj-track"><div class="obj-fill" style="width:0%;background:var(--teal)"></div></div>
+            <div class="obj-sub">En discovery · primeros cierres Q3</div>
+          </div>
+          <div class="obj-item">
+            <div class="obj-header"><div class="obj-label">🎙️ Podcast + Remax</div><div class="obj-val">$1.230.000 / $2.000.000</div></div>
+            <div class="obj-track"><div class="obj-fill" style="width:61%;background:var(--purple)"></div></div>
+            <div class="obj-sub">Ingresos ARS combinados</div>
+          </div>
+        </div>
+      </div>
     </div>
+
+    <!-- OBJETIVOS -->
+    <div class="page" id="page-objetivos">
+      <div class="page-header">
+        <div class="page-title">Objetivos</div>
+        <div class="page-sub">Metas mensuales y trimestrales · Mayo 2026</div>
+      </div>
+      <div class="grid2">
+        <div class="card">
+          <div class="card-title">Ventas — mayo</div>
+          <div class="obj-item">
+            <div class="obj-header"><div class="obj-label">Cierres Warroom</div><div class="obj-val"><span>1</span> / 3</div></div>
+            <div class="obj-track"><div class="obj-fill" style="width:33%;background:var(--accent)"></div></div>
+            <div class="obj-sub">Quedan 2 · 12 días hábiles</div>
+          </div>
+          <div class="obj-item">
+            <div class="obj-header"><div class="obj-label">Demos Public Affairs</div><div class="obj-val"><span>0</span> / 3</div></div>
+            <div class="obj-track"><div class="obj-fill" style="width:0%;background:var(--teal)"></div></div>
+            <div class="obj-sub">Arranca con leads actuales</div>
+          </div>
+          <div class="obj-item">
+            <div class="obj-header"><div class="obj-label">Revenue total USD</div><div class="obj-val">USD <span>2.400</span> / 6.200</div></div>
+            <div class="obj-track"><div class="obj-fill" style="width:39%;background:var(--purple)"></div></div>
+            <div class="obj-sub">Falta USD 3.800 · pipeline cubre USD 4.200</div>
+          </div>
+          <div class="obj-item">
+            <div class="obj-header"><div class="obj-label">Entrevistas discovery PA</div><div class="obj-val"><span>3</span> / 5</div></div>
+            <div class="obj-track"><div class="obj-fill" style="width:60%;background:var(--amber)"></div></div>
+            <div class="obj-sub">2 más para completar sprint</div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">Trimestre Q2 2026</div>
+          <div class="obj-item">
+            <div class="obj-header"><div class="obj-label">Nuevos clientes Warroom</div><div class="obj-val"><span>1</span> / 5</div></div>
+            <div class="obj-track"><div class="obj-fill" style="width:20%;background:var(--accent)"></div></div>
+            <div class="obj-sub">Elecciones 2027 · ventana activa</div>
+          </div>
+          <div class="obj-item">
+            <div class="obj-header"><div class="obj-label">MVP Public Affairs</div><div class="obj-val"><span>30%</span> / 100%</div></div>
+            <div class="obj-track"><div class="obj-fill" style="width:30%;background:var(--teal)"></div></div>
+            <div class="obj-sub">Discovery → definición → prototipo</div>
+          </div>
+          <div class="obj-item">
+            <div class="obj-header"><div class="obj-label">ARR objetivo anual</div><div class="obj-val">USD <span>2.4k</span> / 24k</div></div>
+            <div class="obj-track"><div class="obj-fill" style="width:10%;background:var(--purple)"></div></div>
+            <div class="obj-sub">10% completado · ritmo: 1 cliente/mes</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- WARROOM -->
+    <div class="page" id="page-warroom">
+      <div class="page-header">
+        <div class="page-title">Warroom</div>
+        <div class="page-sub">Plataforma para equipos de comunicación política en campaña</div>
+      </div>
+      <div class="prod-hero prod-hero-warroom">
+        <div class="prod-hero-bg prod-hero-bg-ww"></div>
+        <div class="prod-badge prod-badge-ww"><div class="prod-status-dot prod-status-dot-ww"></div>Producto activo · En mejora</div>
+        <div class="prod-title">Warroom</div>
+        <div class="prod-desc">Plataforma de gestión para equipos de comunicación política en campaña. Centraliza operaciones, distribución de contenido, monitoreo y coordinación de equipos en tiempo real.</div>
+        <div class="prod-meta">
+          <div class="prod-meta-item"><div class="prod-meta-label">Estado</div><div class="prod-meta-val" style="color:var(--accent)">Desarrollado ✓</div></div>
+          <div class="prod-meta-item"><div class="prod-meta-label">Clientes activos</div><div class="prod-meta-val">1</div></div>
+          <div class="prod-meta-item"><div class="prod-meta-label">ARR</div><div class="prod-meta-val">USD 2.400</div></div>
+          <div class="prod-meta-item"><div class="prod-meta-label">Modelo</div><div class="prod-meta-val">SaaS anual</div></div>
+          <div class="prod-meta-item"><div class="prod-meta-label">Precio</div><div class="prod-meta-val">USD 2.400/año</div></div>
+        </div>
+      </div>
+
+      <div class="grid2">
+        <div class="card">
+          <div class="card-title">Features actuales <span class="card-title-sub">desarrolladas</span></div>
+          <div class="feat-list">
+            <div class="feat-item"><div class="feat-check feat-check-done">✓</div><div class="feat-text"><strong>Dashboard de campaña</strong> — vista general de operaciones y estado del equipo</div></div>
+            <div class="feat-item"><div class="feat-check feat-check-done">✓</div><div class="feat-text"><strong>Distribución de contenido</strong> — publicación coordinada en múltiples canales</div></div>
+            <div class="feat-item"><div class="feat-check feat-check-done">✓</div><div class="feat-text"><strong>Gestión de equipo</strong> — roles, tareas y asignación por área</div></div>
+            <div class="feat-item"><div class="feat-check feat-check-done">✓</div><div class="feat-text"><strong>Monitoreo de menciones</strong> — seguimiento de conversaciones clave</div></div>
+            <div class="feat-item"><div class="feat-check feat-check-wip">→</div><div class="feat-text"><strong>Analytics avanzado</strong> — métricas de alcance e impacto en tiempo real</div></div>
+            <div class="feat-item"><div class="feat-check feat-check-wip">→</div><div class="feat-text"><strong>Integración IA</strong> — sugerencias de contenido y detección de crisis</div></div>
+            <div class="feat-item"><div class="feat-check feat-check-pending">○</div><div class="feat-text"><strong>App móvil</strong> — operaciones desde campo para coordinadores</div></div>
+            <div class="feat-item"><div class="feat-check feat-check-pending">○</div><div class="feat-text"><strong>Módulo de debate</strong> — prep y respuesta rápida en tiempo real</div></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">Leads activos para Warroom</div>
+          <div class="lead-item">
+            <div class="lead-av" style="background:rgba(255,107,107,0.12);color:#FF6B6B">AN</div>
+            <div class="lead-info"><div class="lead-name">Agustín Neme</div><div class="lead-org">Gral. Pueyrredon</div></div>
+            <div class="lead-right"><span class="tag tag-hot">Hot</span></div>
+          </div>
+          <div class="lead-item">
+            <div class="lead-av" style="background:rgba(255,107,107,0.12);color:#FF6B6B">PV</div>
+            <div class="lead-info"><div class="lead-name">Pablo Verdecchia</div><div class="lead-org">Equipo Capozzi</div></div>
+            <div class="lead-right"><span class="tag tag-hot">Hot</span></div>
+          </div>
+          <div class="lead-item">
+            <div class="lead-av" style="background:rgba(139,127,247,0.12);color:#8B7FF7">LP</div>
+            <div class="lead-info"><div class="lead-name">Lucas Palatnik</div><div class="lead-org">Equipo Bullrich</div></div>
+            <div class="lead-right"><span class="tag tag-warm">Warm</span></div>
+          </div>
+          <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border)">
+            <div style="font-size:11px;color:var(--text-3);margin-bottom:8px">Contexto comercial</div>
+            <div style="font-size:12px;color:var(--text-2);line-height:1.6">Elecciones 2027 activan la demanda desde Q3 2026. Ventana comercial clave: próximos 6 meses. Foco en equipos de campaña nacional y provincial.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PUBLIC AFFAIRS -->
+    <div class="page" id="page-publicaffairs">
+      <div class="page-header">
+        <div class="page-title">Public Affairs</div>
+        <div class="page-sub">Plataforma para gestión de asuntos públicos corporativos</div>
+      </div>
+      <div class="prod-hero prod-hero-pa">
+        <div class="prod-hero-bg prod-hero-bg-pa"></div>
+        <div class="prod-badge prod-badge-pa"><div class="prod-status-dot prod-status-dot-pa"></div>En Discovery · Sprint activo</div>
+        <div class="prod-title">Public Affairs</div>
+        <div class="prod-desc">Plataforma para empresas y organizaciones que necesitan gestionar sus relaciones con el sector público. Monitoreo legislativo, mapeo de actores, gestión de incidencias y reportes de impacto.</div>
+        <div class="prod-meta">
+          <div class="prod-meta-item"><div class="prod-meta-label">Etapa</div><div class="prod-meta-val" style="color:var(--teal)">Discovery</div></div>
+          <div class="prod-meta-item"><div class="prod-meta-label">Entrevistas</div><div class="prod-meta-val">3 / 5</div></div>
+          <div class="prod-meta-item"><div class="prod-meta-label">Leads calificados</div><div class="prod-meta-val">3</div></div>
+          <div class="prod-meta-item"><div class="prod-meta-label">Target</div><div class="prod-meta-val">Corporativo B2B</div></div>
+          <div class="prod-meta-item"><div class="prod-meta-label">Precio estimado</div><div class="prod-meta-val">USD 3.000/año</div></div>
+        </div>
+      </div>
+
+      <div class="grid2">
+        <div class="card">
+          <div class="card-title">Roadmap de discovery</div>
+          <div class="discovery-track">
+            <div class="disc-phase">
+              <div class="disc-num disc-done">✓</div>
+              <div class="disc-info"><div class="disc-title">Hipótesis inicial</div><div class="disc-desc">Definición del problema, perfil de cliente objetivo y primeras hipótesis de valor</div></div>
+              <div class="disc-right">Completado</div>
+            </div>
+            <div class="disc-phase">
+              <div class="disc-num disc-done">✓</div>
+              <div class="disc-info"><div class="disc-title">Entrevistas exploratorias</div><div class="disc-desc">3 de 5 entrevistas realizadas con referentes de asuntos públicos (AES, Cefeidas, DOW)</div></div>
+              <div class="disc-right">3/5 done</div>
+            </div>
+            <div class="disc-phase">
+              <div class="disc-num disc-active">→</div>
+              <div class="disc-info"><div class="disc-title">Síntesis y patrones</div><div class="disc-desc">Análisis de insights, identificación de jobs-to-be-done y pain points recurrentes</div></div>
+              <div class="disc-right" style="color:var(--amber)">En curso</div>
+            </div>
+            <div class="disc-phase">
+              <div class="disc-num disc-todo">4</div>
+              <div class="disc-info"><div class="disc-title">Definición de MVP</div><div class="disc-desc">Feature set mínimo validado, priorización y roadmap técnico inicial</div></div>
+              <div class="disc-right">Próximo</div>
+            </div>
+            <div class="disc-phase">
+              <div class="disc-num disc-todo">5</div>
+              <div class="disc-info"><div class="disc-title">Prototipo y validación</div><div class="disc-desc">Wireframes de alta fidelidad, testing con primeros clientes potenciales</div></div>
+              <div class="disc-right">Q3 2026</div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">Leads en discovery</div>
+          <div class="lead-item">
+            <div class="lead-av" style="background:rgba(78,205,196,0.12);color:#4ECDC4">AJ</div>
+            <div class="lead-info"><div class="lead-name">Agustina Jefremov</div><div class="lead-org">AES Energía</div><div style="margin-top:5px"><span class="tag tag-warm">Warm</span></div></div>
+            <div class="lead-right"><div class="lead-date">26 may</div><div class="lead-action">Entrevista pendiente</div></div>
+          </div>
+          <div class="lead-item">
+            <div class="lead-av" style="background:rgba(78,205,196,0.12);color:#4ECDC4">JO</div>
+            <div class="lead-info"><div class="lead-name">Juan Ignacio Orlando</div><div class="lead-org">Cefeidas Group</div><div style="margin-top:5px"><span class="tag tag-warm">Warm</span></div></div>
+            <div class="lead-right"><div class="lead-date">Entrevistado</div><div class="lead-action">Muy interesado</div></div>
+          </div>
+          <div class="lead-item">
+            <div class="lead-av" style="background:rgba(139,127,247,0.12);color:#8B7FF7">FR</div>
+            <div class="lead-info"><div class="lead-name">Federico Roveillard</div><div class="lead-org">DOW</div><div style="margin-top:5px"><span class="tag tag-cold">Cold</span></div></div>
+            <div class="lead-right"><div class="lead-date">Entrevistado</div><div class="lead-action">Ciclo largo</div></div>
+          </div>
+          <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border)">
+            <div style="font-size:11px;color:var(--text-3);margin-bottom:8px">Insights clave hasta ahora</div>
+            <div style="font-size:12px;color:var(--text-2);line-height:1.6">Las empresas usan Excel + WhatsApp para gestionar sus asuntos públicos. El mayor dolor es el monitoreo legislativo y la falta de trazabilidad en las gestiones.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </div>
 </div>
 
 <div class="toast" id="toast"></div>
 
 <script>
-const SUPABASE_URL='https://ebrtpohmcmabtdqyrqtl.supabase.co';
-const SUPABASE_KEY='sb_publishable_46IdjeFhjQLMXTKshOZQIQ_l4DiG3G-';
-const {createClient}=supabase;
-const db=createClient(SUPABASE_URL,SUPABASE_KEY);
-let leads=[],currentFilter='todos',editingId=null,mailLeadId=null,selectedMailType='primer_contacto',currentUser=null;
+const titles = { dashboard:'Dashboard', leads:'Pipeline de leads', facturacion:'Facturación', objetivos:'Objetivos', warroom:'Warroom', publicaffairs:'Public Affairs' };
 
-async function init(){
-  const {data:{session}}=await db.auth.getSession();
-  if(session){currentUser=session.user;showApp();}else{showLogin();}
-  db.auth.onAuthStateChange((event,session)=>{if(session){currentUser=session.user;showApp();}else{currentUser=null;showLogin();}});
+function showPage(id, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  btn.classList.add('active');
+  document.getElementById('topbar-title').textContent = titles[id];
 }
-function showLogin(){document.getElementById('login-wrap').style.display='flex';document.getElementById('app').style.display='none';}
-function showApp(){document.getElementById('login-wrap').style.display='none';document.getElementById('app').style.display='block';document.getElementById('user-email-display').textContent='👤 '+currentUser.email;loadData();}
-async function doLogin(){
-  const email=document.getElementById('login-email').value.trim();
-  const pass=document.getElementById('login-pass').value;
-  const btn=document.getElementById('login-btn');
-  const errEl=document.getElementById('login-error');
-  if(!email||!pass){showLoginError('Completá email y contraseña');return;}
-  btn.disabled=true;btn.textContent='Ingresando...';errEl.style.display='none';
-  const{error}=await db.auth.signInWithPassword({email,password:pass});
-  if(error){showLoginError('Email o contraseña incorrectos');btn.disabled=false;btn.textContent='Ingresar';}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
 }
-async function doLogout(){await db.auth.signOut();}
-function showLoginError(msg){const el=document.getElementById('login-error');el.textContent=msg;el.style.display='block';}
-function setStatus(s,msg){const dot=document.getElementById('status-dot'),txt=document.getElementById('status-txt');dot.className='status-dot '+s;txt.textContent=msg||(s==='ok'?'Sincronizado':s==='loading'?'Guardando...':'Error');}
-async function loadData(){
-  setStatus('loading','Cargando...');
-  const{data,error}=await db.from('leads').select('*').order('created_at',{ascending:false});
-  if(error){setStatus('error');showToast('Error: '+error.message);return;}
-  leads=data||[];setStatus('ok');render();checkTodayTasksAuto();
+
+
+const SUPABASE_URL = 'https://ebrtpohmcmabtdqyrqtl.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_46IdjeFhjQLMXTKshOZQIQ_l4DiG3G-';
+const { createClient } = supabase;
+const db = createClient(SUPABASE_URL, SUPABASE_KEY);
+let currentUser = null;
+
+async function init() {
+  const { data: { session } } = await db.auth.getSession();
+  if (session) { currentUser = session.user; showApp(); }
+  else { showLogin(); }
+  db.auth.onAuthStateChange((event, session) => {
+    if (session) { currentUser = session.user; showApp(); }
+    else { showLogin(); }
+  });
 }
-function getTodayStr(){const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
-function checkTodayTasksAuto(){const today=getTodayStr(),tl=leads.filter(l=>l.fecha===today),ol=leads.filter(l=>l.fecha&&l.fecha<today&&l.etapa!=='Cierre');if(!tl.length&&!ol.length)return;showAlertBar(tl,ol);if('Notification'in window){if(Notification.permission==='granted')sendNotification(tl,ol);else if(Notification.permission!=='denied')Notification.requestPermission().then(p=>{if(p==='granted')sendNotification(tl,ol);});}}
-function checkTodayTasks(){const today=getTodayStr(),tl=leads.filter(l=>l.fecha===today),ol=leads.filter(l=>l.fecha&&l.fecha<today&&l.etapa!=='Cierre');if(!tl.length&&!ol.length){showToast('No tenés tareas pendientes hoy 🎉');return;}showAlertBar(tl,ol);}
-function showAlertBar(tl,ol){const total=tl.length+ol.length;document.getElementById('alert-text').textContent=`Tenés ${total} tarea${total>1?'s':''} pendiente${total>1?'s':''} hoy`;document.getElementById('alert-tasks').innerHTML=[...tl.map(l=>`<span class="alert-task">${l.nombre}</span>`),...ol.map(l=>`<span class="alert-task vencida">${l.nombre} (vencida)</span>`)].join('');document.getElementById('alert-bar').classList.remove('hidden');}
-function sendNotification(tl,ol){const total=tl.length+ol.length;new Notification('Poncho CRM',{body:`${total} tarea${total>1?'s':''}: ${[...tl,...ol].map(l=>l.nombre).slice(0,3).join(', ')}`});}
-function openMailModal(id){mailLeadId=id;const lead=leads.find(l=>l.id===id);document.getElementById('mail-lead-name').textContent=lead.nombre;document.getElementById('mail-context-input').value='';document.getElementById('mail-result').style.display='none';document.getElementById('mail-loading').style.display='none';document.querySelectorAll('.mail-type-btn').forEach((b,i)=>b.classList.toggle('selected',i===0));selectedMailType='primer_contacto';document.getElementById('mail-modal-overlay').classList.add('open');}
-function closeMailModal(){document.getElementById('mail-modal-overlay').classList.remove('open');}
-function selectMailType(btn,type){document.querySelectorAll('.mail-type-btn').forEach(b=>b.classList.remove('selected'));btn.classList.add('selected');selectedMailType=type;}
-async function generateMail(){
-  const lead=leads.find(l=>l.id===mailLeadId);
-  const context=document.getElementById('mail-context-input').value.trim();
-  const loadingEl=document.getElementById('mail-loading'),resultEl=document.getElementById('mail-result'),genBtn=document.getElementById('btn-gen-mail');
-  loadingEl.style.display='block';resultEl.style.display='none';genBtn.disabled=true;
-  const types={primer_contacto:'primer contacto y presentación',follow_up:'follow-up sin respuesta',propuesta:'envío de propuesta comercial',demo:'agendar demo del producto',cierre:'avanzar al cierre y contrato',custom:context||'mail comercial general'};
-  const prompt=`Sos el área comercial de Poncho Digital, empresa argentina de software político. Productos: Warroom (comunicación política en campaña) y Public Affairs (asuntos públicos corporativos).\n\nRedactá un mail comercial en español rioplatense, tono ejecutivo pero cercano.\n\nContacto: ${lead.nombre} | ${lead.org} | ${lead.rol||'sin cargo'} | Producto: ${lead.producto==='warroom'?'Warroom':'Public Affairs'} | Etapa: ${lead.etapa} | Canal: ${lead.canal}\nNotas: ${lead.notas||'ninguna'}\nTipo: ${types[selectedMailType]}\nContexto extra: ${context||'ninguno'}\n\nRespondé SOLO con JSON válido sin markdown: {"subject":"asunto","body":"cuerpo con \\n para saltos"}`;
-  try{
-    const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,messages:[{role:'user',content:prompt}]})});
-    const data=await res.json();
-    const raw=data.content.map(c=>c.text||'').join('').replace(/```json|```/g,'').trim();
-    const parsed=JSON.parse(raw);
-    document.getElementById('mail-subject-display').textContent=parsed.subject;
-    document.getElementById('mail-body-display').textContent=parsed.body;
-    loadingEl.style.display='none';resultEl.style.display='block';
-  }catch(e){loadingEl.style.display='none';showToast('Error al generar el mail.');}
-  genBtn.disabled=false;
+
+function showLogin() {
+  document.getElementById('login-wrap').classList.add('visible');
+  document.getElementById('app-layout').style.display = 'none';
+  document.getElementById('app-main').style.display = 'none';
 }
-function copyMail(){const s=document.getElementById('mail-subject-display').textContent,b=document.getElementById('mail-body-display').textContent;navigator.clipboard.writeText(`Asunto: ${s}\n\n${b}`).then(()=>showToast('Mail copiado ✓'));}
-function initials(n){return n.split(' ').slice(0,2).map(w=>w[0]).join('').toUpperCase();}
-function avStyle(p){return p==='warroom'?'background:#EEEDFE;color:#3C3489':'background:#E1F5EE;color:#085041';}
-function tempTag(t){const m={hot:['#FCEBEB','#791F1F','Hot'],warm:['#FAEEDA','#633806','Warm'],cold:['#E6F1FB','#0C447C','Cold']};const[bg,tx,lb]=m[t]||m.cold;return `<span class="tag" style="background:${bg};color:${tx}">${lb}</span>`;}
-function prodTag(p){return p==='warroom'?`<span class="tag" style="background:#EEEDFE;color:#3C3489">Warroom</span>`:`<span class="tag" style="background:#E1F5EE;color:#085041">Public Affairs</span>`;}
-function etapaTag(e){return `<span class="tag" style="background:#F1EFE8;color:#444441">${e}</span>`;}
-function fmtDate(d){if(!d)return '';const p=d.split('T')[0].split('-');return `${parseInt(p[2])} ${'ene feb mar abr may jun jul ago sep oct nov dic'.split(' ')[parseInt(p[1])-1]}`;}
-function getCardClass(l){const t=getTodayStr(),f=l.fecha?l.fecha.split('T')[0]:'';if(f&&f<t&&l.etapa!=='Cierre')return 'card urgent';if(f===t)return 'card today';return 'card';}
-function filtered(){const q=document.getElementById('search').value.toLowerCase(),today=getTodayStr();return leads.filter(l=>{const mf=currentFilter==='todos'||(currentFilter==='warroom'&&l.producto==='warroom')||(currentFilter==='public_affairs'&&l.producto==='public_affairs')||(currentFilter==='hot'&&l.temp==='hot')||(currentFilter==='warm'&&l.temp==='warm')||(currentFilter==='hoy'&&l.fecha&&l.fecha.split('T')[0]===today);return mf&&(!q||l.nombre.toLowerCase().includes(q)||(l.org||'').toLowerCase().includes(q));});}
-function renderMetrics(){const today=getTodayStr(),hoy=leads.filter(l=>l.fecha&&l.fecha.split('T')[0]===today).length,venc=leads.filter(l=>l.fecha&&l.fecha.split('T')[0]<today&&l.etapa!=='Cierre').length;document.getElementById('metrics').innerHTML=[['Total leads',leads.length,''],['Warroom',leads.filter(l=>l.producto==='warroom').length,'color:#3C3489'],['Public Affairs',leads.filter(l=>l.producto==='public_affairs').length,'color:#085041'],['Tareas hoy'+(venc?` <span style="font-size:11px">+${venc}⚠️</span>`:''),hoy,hoy>0?'color:#633806':'']].map(([l,v,s])=>`<div class="met"><div class="met-l">${l}</div><div class="met-v" style="${s}">${v}</div></div>`).join('');}
-function renderPipeline(){const etapas=[['Prospecto','#888780'],['Contactado','#7F77DD'],['Demo','#EF9F27'],['Propuesta','#1D9E75'],['Cierre','#D85A30']];document.getElementById('pipeline').innerHTML=etapas.map(([e,c])=>{const n=leads.filter(l=>l.etapa===e).length;return `<div class="pipe-col"><div class="pipe-header"><div class="pipe-dot" style="background:${c}"></div><div class="pipe-label">${e}</div></div><div class="pipe-n">${n}</div></div>`;}).join('');}
-function renderCards(){const c=document.getElementById('cards'),data=filtered();if(!data.length){c.innerHTML='<div class="empty">No hay leads con ese filtro.</div>';return;}c.innerHTML=data.map(l=>`<div class="${getCardClass(l)}"><div class="av" style="${avStyle(l.producto)}">${initials(l.nombre)}</div><div class="card-info"><div class="card-name">${l.nombre}</div><div class="card-org">${l.org||''}</div><div class="card-tags">${prodTag(l.producto)}${tempTag(l.temp)}${etapaTag(l.etapa)}</div></div><div class="card-right">${l.fecha?`<div class="card-fecha">${fmtDate(l.fecha)}</div>`:''}<div class="card-accion">${l.accion||''}</div><div class="card-actions"><button class="card-btn mail" onclick="openMailModal(${l.id})">✉️ Mail</button><button class="card-btn edit" onclick="openLeadModal(${l.id})">Editar</button></div></div></div>`).join('');}
-function render(){renderMetrics();renderPipeline();renderCards();}
-function setFilter(f,btn){currentFilter=f;document.querySelectorAll('.fb').forEach(b=>b.classList.remove('active'));btn.classList.add('active');renderCards();}
-function openLeadModal(id){editingId=id;document.getElementById('lead-modal-title').textContent=id?'Editar lead':'Nuevo lead';document.getElementById('btn-delete').style.display=id?'block':'none';if(id){const l=leads.find(x=>x.id===id);document.getElementById('f-nombre').value=l.nombre||'';document.getElementById('f-org').value=l.org||'';document.getElementById('f-rol').value=l.rol||'';document.getElementById('f-email').value=l.email||'';document.getElementById('f-producto').value=l.producto||'warroom';document.getElementById('f-etapa').value=l.etapa||'Prospecto';document.getElementById('f-temp').value=l.temp||'warm';document.getElementById('f-canal').value=l.canal||'WhatsApp';document.getElementById('f-accion').value=l.accion||'';document.getElementById('f-fecha').value=l.fecha?l.fecha.split('T')[0]:'';document.getElementById('f-monto').value=l.monto||'';document.getElementById('f-notas').value=l.notas||'';}else{['f-nombre','f-org','f-rol','f-email','f-accion','f-fecha','f-notas'].forEach(i=>document.getElementById(i).value='');document.getElementById('f-monto').value='';document.getElementById('f-producto').value='warroom';document.getElementById('f-etapa').value='Prospecto';document.getElementById('f-temp').value='warm';document.getElementById('f-canal').value='WhatsApp';}document.getElementById('lead-modal-overlay').classList.add('open');}
-function closeLeadModal(){document.getElementById('lead-modal-overlay').classList.remove('open');}
-async function saveLead(){const saveBtn=document.getElementById('btn-save-lead');const data={nombre:document.getElementById('f-nombre').value.trim(),org:document.getElementById('f-org').value.trim(),rol:document.getElementById('f-rol').value.trim(),email:document.getElementById('f-email').value.trim(),producto:document.getElementById('f-producto').value,etapa:document.getElementById('f-etapa').value,temp:document.getElementById('f-temp').value,canal:document.getElementById('f-canal').value,accion:document.getElementById('f-accion').value.trim(),fecha:document.getElementById('f-fecha').value||null,monto:document.getElementById('f-monto').value,notas:document.getElementById('f-notas').value.trim(),updated_at:new Date().toISOString()};if(!data.nombre){showToast('Escribí el nombre');return;}saveBtn.disabled=true;setStatus('loading');if(editingId){const{error}=await db.from('leads').update(data).eq('id',editingId);if(error){showToast('Error: '+error.message);saveBtn.disabled=false;return;}showToast('Lead actualizado ✓');}else{const{error}=await db.from('leads').insert(data);if(error){showToast('Error: '+error.message);saveBtn.disabled=false;return;}showToast('Lead agregado ✓');}saveBtn.disabled=false;await loadData();closeLeadModal();}
-async function deleteLead(){if(!confirm('¿Eliminar este lead?'))return;setStatus('loading');const{error}=await db.from('leads').delete().eq('id',editingId);if(error){showToast('Error: '+error.message);return;}showToast('Lead eliminado');closeLeadModal();await loadData();}
-function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2800);}
-document.getElementById('lead-modal-overlay').addEventListener('click',function(e){if(e.target===this)closeLeadModal();});
-document.getElementById('mail-modal-overlay').addEventListener('click',function(e){if(e.target===this)closeMailModal();});
+
+function showApp() {
+  document.getElementById('login-wrap').classList.remove('visible');
+  document.getElementById('app-layout').style.display = 'flex';
+  document.getElementById('app-main').style.display = 'block';
+  // Mostrar email en sidebar
+  const userRow = document.querySelector('.user-name');
+  if (userRow) userRow.textContent = currentUser.email;
+}
+
+async function doLogin() {
+  const email = document.getElementById('login-email').value.trim();
+  const pass = document.getElementById('login-pass').value;
+  const btn = document.getElementById('login-btn');
+  const errEl = document.getElementById('login-error');
+  if (!email || !pass) { showLoginError('Completá email y contraseña'); return; }
+  btn.disabled = true; btn.textContent = 'Ingresando...'; errEl.style.display = 'none';
+  const { error } = await db.auth.signInWithPassword({ email, password: pass });
+  if (error) { showLoginError('Email o contraseña incorrectos'); btn.disabled = false; btn.textContent = 'Ingresar →'; }
+}
+
+function showLoginError(msg) {
+  const el = document.getElementById('login-error');
+  el.textContent = msg; el.style.display = 'block';
+}
+
+async function doLogout() {
+  await db.auth.signOut();
+  showLogin();
+}
+
 init();
+
+// Revenue chart
+const months = [1200, 2100, 1800, 3400, 4200];
+const maxV = Math.max(...months);
+const chart = document.getElementById('rev-chart');
+months.forEach((v, i) => {
+  const wrap = document.createElement('div');
+  wrap.className = 'rev-bar-wrap';
+  const h = Math.round((v / maxV) * 72);
+  const isLast = i === months.length - 1;
+  wrap.innerHTML = `<div class="rev-bar" style="height:${h}px;background:${isLast ? 'var(--accent)' : 'var(--surface-3)'};border:1px solid ${isLast ? 'rgba(200,240,101,0.3)' : 'var(--border)'}"></div>`;
+  chart.appendChild(wrap);
+});
 </script>
 </body>
 </html>
