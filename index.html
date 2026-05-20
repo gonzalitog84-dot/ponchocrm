@@ -2,859 +2,1074 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>Poncho Digital — CRM</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
-:root {
-  --bg: #0E0E10;
-  --surface: #16161A;
-  --surface-2: #1E1E24;
-  --surface-3: #26262E;
-  --border: rgba(255,255,255,0.07);
-  --border-2: rgba(255,255,255,0.12);
-  --text: #F0EFE9;
-  --text-2: #9B9A94;
-  --text-3: #5C5B57;
-  --accent: #C8F065;
-  --accent-dim: rgba(200,240,101,0.12);
-  --accent-dim-2: rgba(200,240,101,0.06);
-  --purple: #8B7FF7;
-  --purple-dim: rgba(139,127,247,0.12);
-  --teal: #4ECDC4;
-  --teal-dim: rgba(78,205,196,0.12);
-  --amber: #FFB84C;
-  --amber-dim: rgba(255,184,76,0.12);
-  --red: #FF6B6B;
-  --red-dim: rgba(255,107,107,0.12);
-  --radius: 14px;
-  --radius-sm: 8px;
-}
-* { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; overflow-x: hidden; }
+:root{--bg:#0E0E10;--surface:#16161A;--s2:#1E1E24;--s3:#26262E;--border:rgba(255,255,255,0.07);--b2:rgba(255,255,255,0.12);--text:#F0EFE9;--t2:#9B9A94;--t3:#5C5B57;--accent:#C8F065;--adim:rgba(200,240,101,0.12);--purple:#8B7FF7;--pdim:rgba(139,127,247,0.12);--teal:#4ECDC4;--tdim:rgba(78,205,196,0.12);--amber:#FFB84C;--qdim:rgba(255,184,76,0.12);--red:#FF6B6B;--rdim:rgba(255,107,107,0.12);--r:12px;--rs:8px}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);overflow-x:hidden}
+button,input,select,textarea{font-family:'DM Sans',sans-serif}
+::-webkit-scrollbar{width:3px}::-webkit-scrollbar-thumb{background:var(--s3);border-radius:2px}
 
-/* SCROLLBAR */
-::-webkit-scrollbar { width: 4px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--surface-3); border-radius: 2px; }
+/* ── LOGIN ── */
+#login-screen{display:flex;min-height:100vh;align-items:center;justify-content:center;padding:20px}
+.lcard{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:40px 36px;width:100%;max-width:380px}
+.llogo{display:flex;align-items:center;gap:8px;margin-bottom:28px}
+.llogo-dot{width:9px;height:9px;background:var(--accent);border-radius:50%}
+.llogo-txt{font-family:'Syne',sans-serif;font-size:15px;font-weight:700}
+.ltitle{font-family:'Syne',sans-serif;font-size:22px;font-weight:700;margin-bottom:4px}
+.lsub{font-size:13px;color:var(--t3);margin-bottom:28px}
+.lgrp{display:flex;flex-direction:column;gap:5px;margin-bottom:14px}
+.lgrp label{font-size:11px;font-weight:500;color:var(--t3);text-transform:uppercase;letter-spacing:.07em}
+.lgrp input{font-size:14px;padding:10px 12px;border:1px solid var(--b2);border-radius:var(--rs);background:var(--s2);color:var(--text);outline:none;transition:border-color .15s}
+.lgrp input:focus{border-color:var(--accent)}
+.lbtn{width:100%;font-family:'Syne',sans-serif;font-size:14px;font-weight:700;padding:12px;border-radius:var(--rs);border:none;background:var(--accent);color:#0E0E10;cursor:pointer;margin-top:6px;transition:all .15s}
+.lbtn:hover{background:#d4f570}
+.lbtn:disabled{opacity:.5;cursor:not-allowed}
+.lerr{font-size:12px;color:var(--red);background:var(--rdim);border:1px solid rgba(255,107,107,.2);padding:9px 12px;border-radius:var(--rs);margin-top:10px;display:none}
 
-/* SIDEBAR */
-.sidebar {
-  position: fixed; left: 0; top: 0; bottom: 0; width: 220px;
-  background: var(--surface); border-right: 1px solid var(--border);
-  display: flex; flex-direction: column; z-index: 50;
-  padding: 0 0 20px;
-}
-.sidebar-logo {
-  padding: 24px 20px 20px;
-  border-bottom: 1px solid var(--border);
-  margin-bottom: 8px;
-}
-.logo-text { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700; color: var(--text); letter-spacing: -0.02em; }
-.logo-sub { font-size: 11px; color: var(--text-3); margin-top: 2px; }
-.sidebar-nav { flex: 1; padding: 8px 12px; display: flex; flex-direction: column; gap: 2px; }
-.nav-item {
-  display: flex; align-items: center; gap: 10px; padding: 9px 10px;
-  border-radius: var(--radius-sm); cursor: pointer; transition: all .15s;
-  font-size: 13px; font-weight: 400; color: var(--text-2); border: none; background: transparent; width: 100%; text-align: left;
-}
-.nav-item:hover { background: var(--surface-2); color: var(--text); }
-.nav-item.active { background: var(--accent-dim); color: var(--accent); }
-.nav-item .ni-icon { font-size: 16px; width: 20px; text-align: center; flex-shrink: 0; }
-.nav-section { font-size: 10px; font-weight: 600; color: var(--text-3); text-transform: uppercase; letter-spacing: .1em; padding: 14px 10px 6px; }
-.sidebar-bottom { padding: 12px; border-top: 1px solid var(--border); }
-.user-row { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: var(--radius-sm); }
-.user-av { width: 28px; height: 28px; border-radius: 50%; background: var(--accent-dim); color: var(--accent); font-size: 11px; font-weight: 600; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-.user-name { font-size: 12px; color: var(--text-2); }
+/* ── LAYOUT ── */
+#app{display:none;height:100vh;overflow:hidden}
+.layout{display:flex;height:100%}
 
-/* MAIN */
-.main { margin-left: 220px; min-height: 100vh; }
-.topbar {
-  height: 56px; display: flex; align-items: center; justify-content: space-between;
-  padding: 0 32px; border-bottom: 1px solid var(--border);
-  position: sticky; top: 0; background: rgba(14,14,16,0.8); backdrop-filter: blur(12px); z-index: 40;
-}
-.topbar-title { font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 600; letter-spacing: -0.02em; }
-.topbar-right { display: flex; align-items: center; gap: 8px; }
-.btn { font-family: 'DM Sans', sans-serif; font-size: 12px; font-weight: 500; padding: 7px 14px; border-radius: var(--radius-sm); border: 1px solid var(--border-2); background: transparent; color: var(--text-2); cursor: pointer; transition: all .15s; }
-.btn:hover { background: var(--surface-2); color: var(--text); }
-.btn-accent { background: var(--accent); color: #0E0E10; border-color: var(--accent); font-weight: 600; }
-.btn-accent:hover { background: #d4f570; color: #0E0E10; }
+/* ── SIDEBAR ── */
+.sidebar{width:210px;flex-shrink:0;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;height:100%;overflow-y:auto}
+.sb-logo{padding:22px 18px 18px;border-bottom:1px solid var(--border)}
+.sb-logo-name{font-family:'Syne',sans-serif;font-size:14px;font-weight:700}
+.sb-logo-sub{font-size:11px;color:var(--t3);margin-top:2px}
+.sb-nav{flex:1;padding:8px 10px;display:flex;flex-direction:column;gap:1px}
+.sb-sec{font-size:10px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;padding:12px 8px 5px}
+.sb-item{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:var(--rs);cursor:pointer;font-size:13px;color:var(--t2);background:none;border:none;width:100%;text-align:left;transition:all .15s}
+.sb-item:hover{background:var(--s2);color:var(--text)}
+.sb-item.active{background:var(--adim);color:var(--accent)}
+.sb-item .ic{font-size:15px;width:18px;text-align:center;flex-shrink:0}
+.sb-bottom{padding:10px;border-top:1px solid var(--border)}
+.sb-user{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:var(--rs);cursor:pointer;transition:all .15s}
+.sb-user:hover{background:var(--rdim)}
+.sb-av{width:28px;height:28px;border-radius:50%;background:var(--adim);color:var(--accent);font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:'Syne',sans-serif}
+.sb-email{font-size:11px;color:var(--t2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
+.sb-logout{font-size:10px;color:var(--t3)}
 
-.content { padding: 32px; }
-.page { display: none; }
-.page.active { display: block; animation: fadeIn .2s ease; }
-@keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+/* ── MAIN ── */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.topbar{height:52px;display:flex;align-items:center;justify-content:space-between;padding:0 24px;border-bottom:1px solid var(--border);flex-shrink:0;background:rgba(14,14,16,.9);backdrop-filter:blur(10px)}
+.topbar-title{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;letter-spacing:-.02em}
+.topbar-right{display:flex;gap:8px}
+.pages{flex:1;overflow-y:auto;padding:24px}
+.page{display:none}
+.page.active{display:block;animation:fi .2s ease}
+@keyframes fi{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:translateY(0)}}
 
-/* PAGE HEADER */
-.page-header { margin-bottom: 28px; }
-.page-title { font-family: 'Syne', sans-serif; font-size: 26px; font-weight: 700; letter-spacing: -0.03em; margin-bottom: 4px; }
-.page-sub { font-size: 13px; color: var(--text-2); }
+/* ── BUTTONS ── */
+.btn{font-size:12px;font-weight:500;padding:7px 14px;border-radius:var(--rs);border:1px solid var(--b2);background:transparent;color:var(--t2);cursor:pointer;transition:all .15s}
+.btn:hover{background:var(--s2);color:var(--text)}
+.btn-accent{background:var(--accent);color:#0E0E10;border-color:var(--accent);font-weight:600}
+.btn-accent:hover{background:#d4f570}
+.btn-sm{font-size:11px;padding:5px 10px;border-radius:6px}
+.btn-danger{color:var(--red);border-color:var(--rdim);background:var(--rdim)}
+.btn-danger:hover{background:rgba(255,107,107,.2)}
 
-/* METRICS GRID */
-.metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 24px; }
-.met {
-  background: var(--surface); border: 1px solid var(--border);
-  border-radius: var(--radius); padding: 18px 20px;
-  transition: border-color .2s;
-}
-.met:hover { border-color: var(--border-2); }
-.met-label { font-size: 11px; font-weight: 500; color: var(--text-3); text-transform: uppercase; letter-spacing: .08em; margin-bottom: 8px; }
-.met-value { font-family: 'Syne', sans-serif; font-size: 28px; font-weight: 700; letter-spacing: -0.03em; line-height: 1; }
-.met-sub { font-size: 11px; color: var(--text-3); margin-top: 5px; }
-.met-delta { font-size: 11px; font-weight: 500; margin-top: 4px; }
-.met-delta.up { color: var(--accent); }
-.met-delta.down { color: var(--red); }
+/* ── METRICS ── */
+.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px}
+.met{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:16px 18px}
+.met-l{font-size:10px;font-weight:500;color:var(--t3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:7px}
+.met-v{font-family:'Syne',sans-serif;font-size:26px;font-weight:700;letter-spacing:-.03em;line-height:1}
+.met-s{font-size:11px;color:var(--t3);margin-top:4px}
 
-/* PIPELINE */
-.pipeline { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-bottom: 24px; }
-.pipe-col { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; transition: border-color .15s; }
-.pipe-col:hover { border-color: var(--border-2); }
-.pipe-header { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
-.pipe-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
-.pipe-name { font-size: 11px; font-weight: 500; color: var(--text-3); text-transform: uppercase; letter-spacing: .07em; }
-.pipe-n { font-family: 'Syne', sans-serif; font-size: 28px; font-weight: 700; letter-spacing: -0.03em; }
-.pipe-bar { height: 3px; background: var(--surface-3); border-radius: 2px; margin-top: 8px; }
-.pipe-bar-fill { height: 3px; border-radius: 2px; }
+/* ── PIPELINE ── */
+.pipeline{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:20px}
+.pc{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:12px 14px;cursor:pointer;transition:border-color .15s}
+.pc:hover{border-color:var(--b2)}
+.pc.active-filter{border-color:var(--accent)}
+.pc-hd{display:flex;align-items:center;gap:7px;margin-bottom:8px}
+.pc-dot{width:7px;height:7px;border-radius:50%}
+.pc-lbl{font-size:10px;font-weight:500;color:var(--t3);text-transform:uppercase;letter-spacing:.06em}
+.pc-n{font-family:'Syne',sans-serif;font-size:24px;font-weight:700;letter-spacing:-.03em}
 
-/* GRID 2 */
-.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
-.grid3 { display: grid; grid-template-columns: 2fr 1fr; gap: 16px; margin-bottom: 16px; }
+/* ── TOOLBAR ── */
+.toolbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:10px;flex-wrap:wrap}
+.filters{display:flex;gap:5px;flex-wrap:wrap}
+.fb{font-size:12px;font-weight:500;padding:5px 11px;border-radius:20px;border:1px solid var(--b2);background:transparent;color:var(--t2);cursor:pointer;transition:all .15s}
+.fb:hover{background:var(--s2)}
+.fb.active{background:var(--accent);color:#0E0E10;border-color:var(--accent)}
+.search-wrap{position:relative}
+.search-wrap input{font-size:13px;padding:7px 11px 7px 30px;border:1px solid var(--b2);border-radius:var(--rs);background:var(--surface);color:var(--text);width:180px;outline:none}
+.search-wrap input:focus{border-color:var(--accent)}
+.si{position:absolute;left:9px;top:50%;transform:translateY(-50%);color:var(--t3);font-size:13px;pointer-events:none}
 
-/* CARDS */
-.card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px 22px; }
-.card-title { font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 600; letter-spacing: -0.01em; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between; }
-.card-title-sub { font-size: 11px; color: var(--text-3); font-family: 'DM Sans', sans-serif; font-weight: 400; }
+/* ── LEAD CARDS ── */
+.leads-list{display:flex;flex-direction:column;gap:8px}
+.lead-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:14px 16px;transition:border-color .15s}
+.lead-card:hover{border-color:var(--b2)}
+.lead-card.urgent{border-left:3px solid var(--red)}
+.lead-card.today{border-left:3px solid var(--amber)}
+.lc-top{display:flex;align-items:flex-start;gap:12px}
+.lc-av{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;font-family:'Syne',sans-serif}
+.lc-info{flex:1;min-width:0}
+.lc-name{font-size:14px;font-weight:500}
+.lc-org{font-size:12px;color:var(--t2);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lc-tags{display:flex;gap:5px;flex-wrap:wrap;margin-top:6px}
+.lc-right{text-align:right;flex-shrink:0}
+.lc-date{font-size:11px;color:var(--t2)}
+.lc-action{font-size:11px;color:var(--t3);margin-top:3px;max-width:140px;line-height:1.4}
+.lc-btns{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap}
+.tag{font-size:10px;font-weight:600;padding:2px 8px;border-radius:20px;text-transform:uppercase;letter-spacing:.03em}
+.tag-hot{background:var(--rdim);color:var(--red)}
+.tag-warm{background:var(--qdim);color:var(--amber)}
+.tag-cold{background:var(--pdim);color:var(--purple)}
+.tag-ww{background:var(--adim);color:var(--accent)}
+.tag-pa{background:var(--tdim);color:var(--teal)}
+.tag-stage{background:var(--s3);color:var(--t2)}
+.card-btn{font-size:11px;padding:4px 10px;border-radius:6px;border:1px solid var(--b2);background:transparent;color:var(--t2);cursor:pointer;transition:all .15s}
+.card-btn:hover{background:var(--s2)}
+.card-btn.edit{color:var(--accent);border-color:var(--adim);background:var(--adim)}
+.card-btn.mail{color:var(--teal);border-color:var(--tdim);background:var(--tdim)}
 
-/* LEADS LIST */
-.lead-item {
-  display: flex; align-items: center; gap: 12px; padding: 11px 0;
-  border-bottom: 1px solid var(--border); transition: all .15s; cursor: pointer;
-}
-.lead-item:last-child { border-bottom: none; }
-.lead-item:hover { opacity: .85; }
-.lead-av { width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; flex-shrink: 0; font-family: 'Syne', sans-serif; }
-.lead-info { flex: 1; min-width: 0; }
-.lead-name { font-size: 13px; font-weight: 500; color: var(--text); }
-.lead-org { font-size: 11px; color: var(--text-3); margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.lead-right { text-align: right; flex-shrink: 0; }
-.lead-date { font-size: 11px; color: var(--text-3); }
-.lead-action { font-size: 11px; color: var(--text-2); margin-top: 2px; max-width: 130px; text-align: right; }
+/* ── CARDS GENÉRICAS ── */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:20px 22px;margin-bottom:16px}
+.card-title{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;letter-spacing:-.01em;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
 
-/* TAGS */
-.tag { font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 20px; letter-spacing: .03em; text-transform: uppercase; }
-.tag-hot { background: var(--red-dim); color: var(--red); }
-.tag-warm { background: var(--amber-dim); color: var(--amber); }
-.tag-cold { background: rgba(139,127,247,0.15); color: var(--purple); }
-.tag-warroom { background: var(--accent-dim); color: var(--accent); }
-.tag-pa { background: var(--teal-dim); color: var(--teal); }
-.tag-etapa { background: var(--surface-3); color: var(--text-2); }
+/* ── TABLE ── */
+.tbl-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px;min-width:600px}
+th{background:var(--s2);padding:9px 12px;text-align:left;font-weight:500;font-size:11px;color:var(--t3);text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid var(--border)}
+td{padding:10px 12px;border-bottom:1px solid var(--border);color:var(--t2);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--s2)}
 
-/* OBJETIVOS */
-.obj-item { padding: 14px 0; border-bottom: 1px solid var(--border); }
-.obj-item:last-child { border-bottom: none; }
-.obj-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
-.obj-label { font-size: 13px; font-weight: 500; color: var(--text); }
-.obj-val { font-size: 12px; color: var(--text-2); }
-.obj-val span { font-weight: 600; color: var(--text); }
-.obj-track { height: 6px; background: var(--surface-3); border-radius: 3px; overflow: hidden; }
-.obj-fill { height: 6px; border-radius: 3px; transition: width .6s cubic-bezier(.4,0,.2,1); }
-.obj-sub { font-size: 11px; color: var(--text-3); margin-top: 5px; }
+/* ── OBJETIVO BARS ── */
+.obj-item{padding:14px 0;border-bottom:1px solid var(--border)}
+.obj-item:last-child{border-bottom:none}
+.obj-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:7px}
+.obj-label{font-size:13px;font-weight:500}
+.obj-val{font-size:12px;color:var(--t2)}
+.obj-val span{color:var(--text);font-weight:600}
+.obj-track{height:5px;background:var(--s3);border-radius:3px;overflow:hidden}
+.obj-fill{height:5px;border-radius:3px;transition:width .5s}
+.obj-sub{font-size:11px;color:var(--t3);margin-top:4px}
 
-/* FACTURACIÓN */
-.factura-row { display: flex; align-items: center; justify-content: space-between; padding: 11px 0; border-bottom: 1px solid var(--border); }
-.factura-row:last-child { border-bottom: none; }
-.factura-info { flex: 1; }
-.factura-nombre { font-size: 13px; font-weight: 500; color: var(--text); }
-.factura-fecha { font-size: 11px; color: var(--text-3); margin-top: 2px; }
-.factura-monto { font-family: 'DM Mono', monospace; font-size: 13px; font-weight: 500; text-align: right; }
-.factura-status { font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 20px; text-transform: uppercase; letter-spacing: .03em; margin-top: 3px; text-align: right; }
-.fs-cobrado { background: var(--accent-dim); color: var(--accent); }
-.fs-pendiente { background: var(--amber-dim); color: var(--amber); }
-.fs-vencido { background: var(--red-dim); color: var(--red); }
+/* ── PRODUCTO HERO ── */
+.prod-hero{border-radius:var(--r);padding:24px;margin-bottom:16px;position:relative;overflow:hidden}
+.ph-ww{background:linear-gradient(135deg,#1A1F12,#212B10);border:1px solid rgba(200,240,101,.15)}
+.ph-pa{background:linear-gradient(135deg,#12181F,#0F1E24);border:1px solid rgba(78,205,196,.15)}
+.prod-badge{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:600;padding:4px 10px;border-radius:20px;text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px}
+.pb-ww{background:var(--adim);color:var(--accent);border:1px solid rgba(200,240,101,.15)}
+.pb-pa{background:var(--tdim);color:var(--teal);border:1px solid rgba(78,205,196,.15)}
+.pdot{width:6px;height:6px;border-radius:50%;animation:blink 2s infinite}
+.pdot-ww{background:var(--accent)}
+.pdot-pa{background:var(--teal)}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.4}}
+.prod-title{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;letter-spacing:-.03em;margin-bottom:6px}
+.prod-desc{font-size:13px;color:var(--t2);line-height:1.6;max-width:500px}
 
-/* PRODUCTO */
-.prod-hero {
-  border-radius: var(--radius); padding: 28px; margin-bottom: 16px;
-  position: relative; overflow: hidden;
-}
-.prod-hero-warroom { background: linear-gradient(135deg, #1A1F12 0%, #212B10 100%); border: 1px solid rgba(200,240,101,0.2); }
-.prod-hero-pa { background: linear-gradient(135deg, #12181F 0%, #0F1E24 100%); border: 1px solid rgba(78,205,196,0.2); }
-.prod-hero-bg {
-  position: absolute; right: -20px; top: -20px; width: 200px; height: 200px;
-  border-radius: 50%; opacity: .06; filter: blur(40px);
-}
-.prod-hero-bg-ww { background: var(--accent); }
-.prod-hero-bg-pa { background: var(--teal); }
-.prod-badge { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 20px; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 12px; }
-.prod-badge-ww { background: var(--accent-dim); color: var(--accent); border: 1px solid rgba(200,240,101,0.2); }
-.prod-badge-pa { background: var(--teal-dim); color: var(--teal); border: 1px solid rgba(78,205,196,0.2); }
-.prod-status-dot { width: 6px; height: 6px; border-radius: 50%; animation: blink 2s infinite; }
-.prod-status-dot-ww { background: var(--accent); }
-.prod-status-dot-pa { background: var(--teal); }
-@keyframes blink { 0%,100%{opacity:1} 50%{opacity:.4} }
-.prod-title { font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 700; letter-spacing: -0.03em; margin-bottom: 6px; }
-.prod-desc { font-size: 13px; color: var(--text-2); line-height: 1.6; margin-bottom: 16px; max-width: 500px; }
-.prod-meta { display: flex; gap: 20px; flex-wrap: wrap; }
-.prod-meta-item { display: flex; flex-direction: column; gap: 2px; }
-.prod-meta-label { font-size: 10px; color: var(--text-3); text-transform: uppercase; letter-spacing: .08em; }
-.prod-meta-val { font-size: 13px; font-weight: 500; color: var(--text); }
+/* ── DISCOVERY ── */
+.disc-item{display:flex;gap:12px;padding:12px 0;border-bottom:1px solid var(--border)}
+.disc-item:last-child{border-bottom:none}
+.disc-n{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;font-family:'Syne',sans-serif}
+.dn-done{background:var(--tdim);color:var(--teal);border:1px solid rgba(78,205,196,.3)}
+.dn-active{background:var(--qdim);color:var(--amber);border:1px solid rgba(255,184,76,.3)}
+.dn-todo{background:var(--s3);color:var(--t3);border:1px solid var(--border)}
+.disc-body{flex:1}
+.disc-title{font-size:13px;font-weight:500;margin-bottom:2px}
+.disc-desc{font-size:12px;color:var(--t3);line-height:1.5}
+.disc-status{font-size:11px;color:var(--t3);flex-shrink:0;padding-top:4px}
 
-/* DISCOVERY */
-.discovery-track { margin-top: 16px; }
-.disc-phase { display: flex; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--border); }
-.disc-phase:last-child { border-bottom: none; }
-.disc-num { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; flex-shrink: 0; font-family: 'Syne', sans-serif; }
-.disc-done { background: var(--teal-dim); color: var(--teal); border: 1px solid rgba(78,205,196,0.3); }
-.disc-active { background: var(--amber-dim); color: var(--amber); border: 1px solid rgba(255,184,76,0.3); }
-.disc-todo { background: var(--surface-3); color: var(--text-3); border: 1px solid var(--border); }
-.disc-info { flex: 1; }
-.disc-title { font-size: 13px; font-weight: 500; color: var(--text); margin-bottom: 3px; }
-.disc-desc { font-size: 12px; color: var(--text-3); line-height: 1.5; }
-.disc-right { font-size: 11px; color: var(--text-3); flex-shrink: 0; }
+/* ── FEATURES ── */
+.feat-item{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;background:var(--s2);border-radius:var(--rs);border:1px solid var(--border);margin-bottom:6px}
+.fc{width:18px;height:18px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0;margin-top:1px}
+.fc-done{background:var(--adim);color:var(--accent)}
+.fc-wip{background:var(--qdim);color:var(--amber)}
+.fc-todo{background:var(--s3);color:var(--t3)}
+.feat-txt{font-size:12px;color:var(--t2);flex:1;line-height:1.5}
+.feat-txt strong{color:var(--text);font-weight:500}
+.feat-actions{display:flex;gap:4px;flex-shrink:0}
 
-/* FEATURES LIST */
-.feat-list { display: flex; flex-direction: column; gap: 8px; margin-top: 16px; }
-.feat-item { display: flex; align-items: flex-start; gap: 10px; padding: 10px 12px; background: var(--surface-2); border-radius: var(--radius-sm); border: 1px solid var(--border); }
-.feat-check { width: 18px; height: 18px; border-radius: 5px; display: flex; align-items: center; justify-content: center; font-size: 10px; flex-shrink: 0; margin-top: 1px; }
-.feat-check-done { background: var(--accent-dim); color: var(--accent); border: 1px solid rgba(200,240,101,0.3); }
-.feat-check-pending { background: var(--surface-3); color: var(--text-3); border: 1px solid var(--border); }
-.feat-check-wip { background: var(--amber-dim); color: var(--amber); border: 1px solid rgba(255,184,76,0.3); }
-.feat-text { font-size: 12px; color: var(--text-2); flex: 1; line-height: 1.5; }
-.feat-text strong { color: var(--text); font-weight: 500; }
+/* ── MODAL ── */
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:200;align-items:center;justify-content:center;padding:16px}
+.overlay.open{display:flex}
+.modal{background:var(--surface);border:1px solid var(--b2);border-radius:16px;width:100%;max-width:520px;padding:24px;box-shadow:0 16px 60px rgba(0,0,0,.4);max-height:90vh;overflow-y:auto}
+.modal-title{font-family:'Syne',sans-serif;font-size:16px;font-weight:700;margin-bottom:20px;letter-spacing:-.02em}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.fg{display:flex;flex-direction:column;gap:5px}
+.fg.full{grid-column:1/-1}
+.fg label{font-size:11px;font-weight:500;color:var(--t3);text-transform:uppercase;letter-spacing:.07em}
+.fg input,.fg select,.fg textarea{font-size:13px;padding:9px 11px;border:1px solid var(--b2);border-radius:var(--rs);background:var(--s2);color:var(--text);outline:none;transition:border-color .15s;-webkit-appearance:none}
+.fg input:focus,.fg select:focus,.fg textarea:focus{border-color:var(--accent);background:var(--s3)}
+.fg select option{background:var(--s2)}
+.fg textarea{resize:vertical;min-height:70px}
+.modal-footer{display:flex;justify-content:flex-end;gap:8px;margin-top:20px;flex-wrap:wrap}
 
-/* REVENUE CHART */
-.rev-chart { display: flex; align-items: flex-end; gap: 6px; height: 80px; margin: 16px 0 8px; }
-.rev-bar-wrap { display: flex; flex-direction: column; align-items: center; gap: 4px; flex: 1; }
-.rev-bar { width: 100%; border-radius: 4px 4px 0 0; transition: opacity .15s; }
-.rev-bar:hover { opacity: .8; }
-.rev-label { font-size: 10px; color: var(--text-3); }
+/* ── MAIL MODAL ── */
+.mail-types{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-bottom:14px}
+.mtype{padding:10px 7px;border-radius:var(--rs);border:1px solid var(--b2);background:transparent;cursor:pointer;text-align:center;transition:all .15s}
+.mtype:hover{background:var(--s2)}
+.mtype.sel{border-color:var(--accent);background:var(--adim)}
+.mtype-icon{font-size:18px;margin-bottom:3px}
+.mtype-label{font-size:11px;font-weight:600;color:var(--text);display:block}
+.mtype-desc{font-size:10px;color:var(--t3);display:block;margin-top:1px}
+.mail-result{background:var(--s2);border:1px solid var(--border);border-radius:var(--rs);padding:14px;margin-top:14px;display:none}
+.mail-res-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.mail-res-title{font-size:11px;font-weight:500;color:var(--t3);text-transform:uppercase;letter-spacing:.06em}
+.mail-subject{font-size:13px;font-weight:600;color:var(--text);margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid var(--border)}
+.mail-body{font-size:13px;color:var(--t2);line-height:1.7;white-space:pre-wrap}
+.mail-loading{text-align:center;padding:24px;color:var(--t3);font-size:13px;display:none}
+.spin{display:inline-block;width:15px;height:15px;border:2px solid var(--s3);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;margin-right:7px;vertical-align:middle}
+@keyframes spin{to{transform:rotate(360deg)}}
 
-/* ACTIVITY */
-.activity-item { display: flex; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); }
-.activity-item:last-child { border-bottom: none; }
-.activity-icon { width: 30px; height: 30px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 13px; flex-shrink: 0; }
-.activity-info { flex: 1; }
-.activity-title { font-size: 13px; color: var(--text); font-weight: 500; }
-.activity-sub { font-size: 11px; color: var(--text-3); margin-top: 2px; }
-.activity-time { font-size: 11px; color: var(--text-3); flex-shrink: 0; }
+/* ── ALERT BAR ── */
+.alert-bar{background:#1A180D;border-bottom:1px solid rgba(255,184,76,.2);padding:10px 24px;display:flex;align-items:flex-start;justify-content:space-between;gap:10px;flex-shrink:0}
+.alert-bar.hidden{display:none}
+.alert-tasks{display:flex;gap:5px;flex-wrap:wrap;margin-top:4px}
+.alert-task{font-size:11px;background:var(--qdim);color:var(--amber);padding:2px 8px;border-radius:10px;font-weight:500}
+.alert-task.v{background:var(--rdim);color:var(--red)}
 
-/* TOAST */
-.toast { position: fixed; bottom: 22px; right: 22px; background: var(--text); color: var(--bg); font-size: 13px; padding: 9px 16px; border-radius: 8px; z-index: 300; opacity: 0; transform: translateY(8px); transition: all .2s; pointer-events: none; font-weight: 500; }
-.toast.show { opacity: 1; transform: translateY(0); }
+/* ── TOAST ── */
+.toast{position:fixed;bottom:20px;right:20px;background:var(--text);color:var(--bg);font-size:13px;font-weight:500;padding:9px 16px;border-radius:var(--rs);z-index:400;opacity:0;transform:translateY(6px);transition:all .2s;pointer-events:none;max-width:280px}
+.toast.show{opacity:1;transform:translateY(0)}
 
-@media(max-width:900px){
+/* ── EMPTY ── */
+.empty{text-align:center;padding:48px;color:var(--t3);font-size:13px}
+.loader{text-align:center;padding:48px;color:var(--t3);font-size:13px}
+
+/* ── MOBILE ── */
+@media(max-width:768px){
   .sidebar{display:none}
-  .main{margin-left:0}
+  .mobile-nav{display:flex;position:fixed;bottom:0;left:0;right:0;background:var(--surface);border-top:1px solid var(--border);z-index:100;padding:6px 0 max(6px,env(safe-area-inset-bottom))}
+  .mn-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 4px;cursor:pointer;border:none;background:none;color:var(--t3);font-size:9px;font-weight:500;text-transform:uppercase;letter-spacing:.06em;transition:color .15s}
+  .mn-item.active{color:var(--accent)}
+  .mn-item .mn-ic{font-size:18px}
+  .pages{padding:16px;padding-bottom:80px}
   .metrics{grid-template-columns:repeat(2,1fr)}
   .pipeline{grid-template-columns:repeat(3,1fr)}
-  .grid2,.grid3{grid-template-columns:1fr}
+  .grid2{grid-template-columns:1fr}
+  .form-grid{grid-template-columns:1fr}
+  .mail-types{grid-template-columns:repeat(2,1fr)}
+  .topbar{padding:0 16px}
+  .lc-right{display:none}
+  table{font-size:12px}
+  th,td{padding:8px 10px}
 }
-
-/* LOGIN */
-.login-wrap{display:none;min-height:100vh;align-items:center;justify-content:center;padding:20px;background:var(--bg)}
-.login-wrap.visible{display:flex}
-.login-card{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:44px 40px;width:100%;max-width:400px;box-shadow:0 0 80px rgba(200,240,101,0.04)}
-.login-logo{display:flex;align-items:center;gap:10px;margin-bottom:32px}
-.login-logo-dot{width:10px;height:10px;background:var(--accent);border-radius:50%}
-.login-logo-text{font-family:'Syne',sans-serif;font-size:16px;font-weight:700;letter-spacing:-0.02em}
-.login-title{font-family:'Syne',sans-serif;font-size:24px;font-weight:700;letter-spacing:-0.03em;margin-bottom:6px}
-.login-sub{font-size:13px;color:var(--text-3);margin-bottom:32px;line-height:1.5}
-.login-group{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
-.login-group label{font-size:11px;font-weight:500;color:var(--text-3);text-transform:uppercase;letter-spacing:.08em}
-.login-group input{font-family:'DM Sans',sans-serif;font-size:14px;padding:11px 14px;border:1px solid var(--border-2);border-radius:10px;background:var(--surface-2);color:var(--text);outline:none;transition:border-color .15s}
-.login-group input:focus{border-color:var(--accent);background:var(--surface-3)}
-.login-group input::placeholder{color:var(--text-3)}
-.login-btn{width:100%;font-family:'Syne',sans-serif;font-size:14px;font-weight:700;padding:12px;border-radius:10px;border:none;background:var(--accent);color:#0E0E10;cursor:pointer;margin-top:8px;transition:all .15s;letter-spacing:-0.01em}
-.login-btn:hover{background:#d4f570;transform:translateY(-1px)}
-.login-btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
-.login-error{font-size:12px;color:var(--red);background:var(--red-dim);padding:10px 14px;border-radius:8px;margin-top:12px;display:none;border:1px solid rgba(255,107,107,0.2)}
-
+@media(min-width:769px){.mobile-nav{display:none}}
 </style>
 </head>
 <body>
 
-
 <!-- LOGIN -->
-<div class="login-wrap visible" id="login-wrap">
-  <div class="login-card">
-    <div class="login-logo"><div class="login-logo-dot"></div><span class="login-logo-text">Poncho Digital</span></div>
-    <div class="login-title">Bienvenido</div>
-    <div class="login-sub">Ingresá con tu cuenta para acceder al CRM y gestión de producto</div>
-    <div class="login-group"><label>Email</label><input type="email" id="login-email" placeholder="tu@email.com" onkeydown="if(event.key==='Enter')doLogin()"></div>
-    <div class="login-group"><label>Contraseña</label><input type="password" id="login-pass" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"></div>
-    <button class="login-btn" id="login-btn" onclick="doLogin()">Ingresar →</button>
-    <div class="login-error" id="login-error"></div>
+<div id="login-screen">
+  <div class="lcard">
+    <div class="llogo"><div class="llogo-dot"></div><span class="llogo-txt">Poncho Digital</span></div>
+    <div class="ltitle">Bienvenido</div>
+    <div class="lsub">Ingresá con tu cuenta para continuar</div>
+    <div class="lgrp"><label>Email</label><input type="email" id="l-email" placeholder="tu@email.com" onkeydown="if(event.key==='Enter')doLogin()"></div>
+    <div class="lgrp"><label>Contraseña</label><input type="password" id="l-pass" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"></div>
+    <button class="lbtn" id="l-btn" onclick="doLogin()">Ingresar →</button>
+    <div class="lerr" id="l-err"></div>
   </div>
 </div>
 
-<div class="sidebar" id="app-layout" style="display:none">
-  <div class="sidebar-logo">
-    <div class="logo-text">Poncho Digital</div>
-    <div class="logo-sub">CRM & Producto</div>
-  </div>
-  <nav class="sidebar-nav">
-    <div class="nav-section">Principal</div>
-    <button class="nav-item active" onclick="showPage('dashboard',this)"><span class="ni-icon">⚡</span>Dashboard</button>
-    <button class="nav-item" onclick="showPage('leads',this)"><span class="ni-icon">👥</span>Leads</button>
-    <button class="nav-item" onclick="showPage('facturacion',this)"><span class="ni-icon">💰</span>Facturación</button>
-    <button class="nav-item" onclick="showPage('objetivos',this)"><span class="ni-icon">🎯</span>Objetivos</button>
-    <div class="nav-section">Producto</div>
-    <button class="nav-item" onclick="showPage('warroom',this)"><span class="ni-icon">🗡️</span>Warroom</button>
-    <button class="nav-item" onclick="showPage('publicaffairs',this)"><span class="ni-icon">🔍</span>Public Affairs</button>
+<!-- APP -->
+<div id="app">
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="sb-logo"><div class="sb-logo-name">Poncho Digital</div><div class="sb-logo-sub">CRM</div></div>
+      <nav class="sb-nav">
+        <div class="sb-sec">Principal</div>
+        <button class="sb-item active" onclick="nav('dashboard',this)"><span class="ic">⚡</span>Dashboard</button>
+        <button class="sb-item" onclick="nav('leads',this)"><span class="ic">👥</span>Leads</button>
+        <button class="sb-item" onclick="nav('facturacion',this)"><span class="ic">💰</span>Facturación</button>
+        <button class="sb-item" onclick="nav('objetivos',this)"><span class="ic">🎯</span>Objetivos</button>
+        <div class="sb-sec">Producto</div>
+        <button class="sb-item" onclick="nav('warroom',this)"><span class="ic">🗡️</span>Warroom</button>
+        <button class="sb-item" onclick="nav('publicaffairs',this)"><span class="ic">🔍</span>Public Affairs</button>
+      </nav>
+      <div class="sb-bottom">
+        <div class="sb-user" onclick="doLogout()" title="Cerrar sesión">
+          <div class="sb-av" id="sb-av">GG</div>
+          <div class="sb-email" id="sb-email">usuario</div>
+          <div class="sb-logout">↩</div>
+        </div>
+      </div>
+    </aside>
+
+    <div class="main">
+      <div class="topbar">
+        <div class="topbar-title" id="topbar-title">Dashboard</div>
+        <div class="topbar-right">
+          <button class="btn btn-sm" onclick="checkToday()">📋 Hoy</button>
+          <button class="btn btn-accent btn-sm" onclick="openLeadModal(null)">+ Lead</button>
+        </div>
+      </div>
+      <div class="alert-bar hidden" id="alert-bar">
+        <div style="flex:1"><div style="font-size:13px;color:var(--amber);font-weight:500" id="alert-txt"></div><div class="alert-tasks" id="alert-tasks"></div></div>
+        <button style="background:none;border:none;color:var(--t3);cursor:pointer;font-size:16px" onclick="document.getElementById('alert-bar').classList.add('hidden')">✕</button>
+      </div>
+      <div class="pages">
+
+        <!-- DASHBOARD -->
+        <div class="page active" id="page-dashboard">
+          <div class="metrics" id="dash-metrics"></div>
+          <div class="pipeline" id="dash-pipeline"></div>
+          <div class="card">
+            <div class="card-title">Seguimientos urgentes <button class="btn btn-sm" onclick="nav('leads',document.querySelector('.sb-item:nth-child(3)'))">Ver todos →</button></div>
+            <div id="dash-leads"></div>
+          </div>
+        </div>
+
+        <!-- LEADS -->
+        <div class="page" id="page-leads">
+          <div class="toolbar">
+            <div class="filters">
+              <button class="fb active" onclick="setFilter('todos',this)">Todos</button>
+              <button class="fb" onclick="setFilter('warroom',this)">Warroom</button>
+              <button class="fb" onclick="setFilter('public_affairs',this)">Public Affairs</button>
+              <button class="fb" onclick="setFilter('hot',this)">🔴 Hot</button>
+              <button class="fb" onclick="setFilter('warm',this)">🟡 Warm</button>
+              <button class="fb" onclick="setFilter('hoy',this)">📅 Hoy</button>
+            </div>
+            <div class="search-wrap"><span class="si">🔍</span><input type="text" placeholder="Buscar..." id="search" oninput="renderLeads()"></div>
+          </div>
+          <div class="leads-list" id="leads-list"><div class="loader">Cargando...</div></div>
+        </div>
+
+        <!-- FACTURACIÓN -->
+        <div class="page" id="page-facturacion">
+          <div class="metrics" id="fac-metrics"></div>
+          <div class="card">
+            <div class="card-title">Facturas <button class="btn btn-accent btn-sm" onclick="openFacturaModal(null)">+ Nueva factura</button></div>
+            <div class="tbl-wrap"><table><thead><tr><th>Cliente</th><th>Concepto</th><th>Monto</th><th>Vencimiento</th><th>Estado</th><th></th></tr></thead><tbody id="fac-tbody"></tbody></table></div>
+          </div>
+        </div>
+
+        <!-- OBJETIVOS -->
+        <div class="page" id="page-objetivos">
+          <div class="card">
+            <div class="card-title">Objetivos del mes <button class="btn btn-accent btn-sm" onclick="openObjetivoModal(null)">+ Nuevo objetivo</button></div>
+            <div id="obj-list"></div>
+          </div>
+        </div>
+
+        <!-- WARROOM -->
+        <div class="page" id="page-warroom">
+          <div class="prod-hero ph-ww">
+            <div class="prod-badge pb-ww"><div class="pdot pdot-ww"></div>Activo · En mejora</div>
+            <div class="prod-title">Warroom</div>
+            <div class="prod-desc" id="ww-desc">Plataforma para equipos de comunicación política en campaña.</div>
+          </div>
+          <div class="grid2">
+            <div class="card">
+              <div class="card-title">Features <button class="btn btn-accent btn-sm" onclick="openFeatModal('warroom',null)">+ Feature</button></div>
+              <div id="ww-feats"></div>
+            </div>
+            <div class="card">
+              <div class="card-title">Info del producto</div>
+              <div id="ww-info"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- PUBLIC AFFAIRS -->
+        <div class="page" id="page-publicaffairs">
+          <div class="prod-hero ph-pa">
+            <div class="prod-badge pb-pa"><div class="pdot pdot-pa"></div>En Discovery</div>
+            <div class="prod-title">Public Affairs</div>
+            <div class="prod-desc" id="pa-desc">Plataforma para gestión de asuntos públicos corporativos.</div>
+          </div>
+          <div class="grid2">
+            <div class="card">
+              <div class="card-title">Etapas de discovery <button class="btn btn-accent btn-sm" onclick="openDiscoveryModal(null)">+ Etapa</button></div>
+              <div id="pa-discovery"></div>
+            </div>
+            <div class="card">
+              <div class="card-title">Info del producto</div>
+              <div id="pa-info"></div>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /pages -->
+    </div><!-- /main -->
+  </div><!-- /layout -->
+
+  <!-- MOBILE NAV -->
+  <nav class="mobile-nav">
+    <button class="mn-item active" onclick="nav('dashboard',this)"><span class="mn-ic">⚡</span>Dashboard</button>
+    <button class="mn-item" onclick="nav('leads',this)"><span class="mn-ic">👥</span>Leads</button>
+    <button class="mn-item" onclick="nav('facturacion',this)"><span class="mn-ic">💰</span>Facturación</button>
+    <button class="mn-item" onclick="nav('warroom',this)"><span class="mn-ic">🗡️</span>Warroom</button>
+    <button class="mn-item" onclick="nav('publicaffairs',this)"><span class="mn-ic">🔍</span>PA</button>
   </nav>
-  <div class="sidebar-bottom">
-    <div class="user-row" style="cursor:pointer" onclick="doLogout()" title="Cerrar sesión">
-      <div class="user-av">GG</div>
-      <div class="user-name">gonzalo@poncho.ar</div>
+</div><!-- /app -->
+
+<!-- LEAD MODAL -->
+<div class="overlay" id="lead-overlay">
+  <div class="modal">
+    <div class="modal-title" id="lead-modal-title">Nuevo lead</div>
+    <div class="form-grid">
+      <div class="fg full"><label>Nombre completo</label><input type="text" id="f-nombre" placeholder="Nombre y apellido"></div>
+      <div class="fg"><label>Organización</label><input type="text" id="f-org" placeholder="Empresa / Partido / Equipo"></div>
+      <div class="fg"><label>Cargo / Rol</label><input type="text" id="f-rol" placeholder="Cargo o función"></div>
+      <div class="fg"><label>Email</label><input type="email" id="f-email" placeholder="mail@dominio.com"></div>
+      <div class="fg"><label>Teléfono / WhatsApp</label><input type="text" id="f-tel" placeholder="+54 9 ..."></div>
+      <div class="fg"><label>Producto</label><select id="f-producto"><option value="warroom">Warroom</option><option value="public_affairs">Public Affairs</option></select></div>
+      <div class="fg"><label>Etapa</label><select id="f-etapa"><option>Prospecto</option><option>Contactado</option><option>Demo</option><option>Propuesta</option><option>Negociación</option><option>Cierre</option></select></div>
+      <div class="fg"><label>Temperatura</label><select id="f-temp"><option value="hot">🔴 Hot</option><option value="warm">🟡 Warm</option><option value="cold">🔵 Cold</option></select></div>
+      <div class="fg"><label>Canal</label><select id="f-canal"><option>WhatsApp</option><option>Mail</option><option>LinkedIn</option><option>Reunión</option><option>Referido</option><option>Mixto</option></select></div>
+      <div class="fg"><label>Monto estimado (USD)</label><input type="number" id="f-monto" placeholder="0"></div>
+      <div class="fg full"><label>Próxima acción</label><input type="text" id="f-accion" placeholder="Qué tenés que hacer"></div>
+      <div class="fg"><label>Fecha próxima acción</label><input type="date" id="f-fecha"></div>
+      <div class="fg full"><label>Notas</label><textarea id="f-notas" placeholder="Contexto, historial, detalles..."></textarea></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-danger btn-sm" id="lead-del-btn" onclick="deleteLead()" style="display:none;margin-right:auto">Eliminar</button>
+      <button class="btn btn-sm" onclick="closeOverlay('lead-overlay')">Cancelar</button>
+      <button class="btn btn-accent btn-sm" id="lead-save-btn" onclick="saveLead()">Guardar</button>
     </div>
   </div>
 </div>
 
-<div class="main" id="app-main" style="display:none">
-  <div class="topbar">
-    <div class="topbar-title" id="topbar-title">Dashboard</div>
-    <div class="topbar-right">
-      <button class="btn" onclick="showToast('Resumen semanal generado ✓')">📋 Resumen</button>
-      <button class="btn btn-accent" onclick="showToast('+ Nuevo lead agregado')">+ Nuevo lead</button>
+<!-- MAIL MODAL -->
+<div class="overlay" id="mail-overlay">
+  <div class="modal" style="max-width:580px">
+    <div class="modal-title">✉️ Mail para <span id="mail-lead-name" style="color:var(--accent)"></span></div>
+    <div class="mail-types">
+      <button class="mtype sel" onclick="selMailType(this,'primer_contacto')"><div class="mtype-icon">👋</div><span class="mtype-label">Primer contacto</span><span class="mtype-desc">Presentación</span></button>
+      <button class="mtype" onclick="selMailType(this,'follow_up')"><div class="mtype-icon">🔄</div><span class="mtype-label">Follow-up</span><span class="mtype-desc">Sin respuesta</span></button>
+      <button class="mtype" onclick="selMailType(this,'propuesta')"><div class="mtype-icon">📄</div><span class="mtype-label">Propuesta</span><span class="mtype-desc">Envío propuesta</span></button>
+      <button class="mtype" onclick="selMailType(this,'demo')"><div class="mtype-icon">🖥️</div><span class="mtype-label">Agendar demo</span><span class="mtype-desc">Reunión demo</span></button>
+      <button class="mtype" onclick="selMailType(this,'cierre')"><div class="mtype-icon">🤝</div><span class="mtype-label">Cierre</span><span class="mtype-desc">Avanzar contrato</span></button>
+      <button class="mtype" onclick="selMailType(this,'custom')"><div class="mtype-icon">✏️</div><span class="mtype-label">Personalizado</span><span class="mtype-desc">Describí vos</span></button>
+    </div>
+    <div class="fg"><label>Contexto adicional (opcional)</label><textarea id="mail-ctx" placeholder="Ej: mencionar evento X, precio $Y..." style="margin-top:5px"></textarea></div>
+    <div class="mail-loading" id="mail-loading"><span class="spin"></span>Generando con IA...</div>
+    <div class="mail-result" id="mail-result">
+      <div class="mail-res-hd"><span class="mail-res-title">Mail generado</span><button class="btn btn-sm" onclick="copyMail()">📋 Copiar</button></div>
+      <div class="mail-subject" id="mail-subj"></div>
+      <div class="mail-body" id="mail-body-txt"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-sm" onclick="closeOverlay('mail-overlay')">Cerrar</button>
+      <button class="btn btn-accent btn-sm" id="mail-gen-btn" onclick="genMail()">✨ Generar mail</button>
     </div>
   </div>
+</div>
 
-  <div class="content">
-
-    <!-- DASHBOARD -->
-    <div class="page active" id="page-dashboard">
-      <div class="page-header">
-        <div class="page-title">Buenos días, Gonzalo 👋</div>
-        <div class="page-sub">Martes 19 de mayo · 3 tareas urgentes hoy</div>
-      </div>
-
-      <div class="metrics">
-        <div class="met">
-          <div class="met-label">Leads activos</div>
-          <div class="met-value">6</div>
-          <div class="met-delta up">↑ 2 este mes</div>
-        </div>
-        <div class="met">
-          <div class="met-label">Revenue mayo</div>
-          <div class="met-value" style="color:var(--accent)">$4.2k</div>
-          <div class="met-delta up">↑ 68% obj.</div>
-        </div>
-        <div class="met">
-          <div class="met-label">Por cobrar</div>
-          <div class="met-value" style="color:var(--amber)">$2.8k</div>
-          <div class="met-sub">3 facturas pendientes</div>
-        </div>
-        <div class="met">
-          <div class="met-label">Tasa cierre</div>
-          <div class="met-value" style="color:var(--purple)">33%</div>
-          <div class="met-delta up">↑ vs mes anterior</div>
-        </div>
-      </div>
-
-      <div class="pipeline">
-        <div class="pipe-col">
-          <div class="pipe-header"><div class="pipe-dot" style="background:#5C5B57"></div><div class="pipe-name">Prospecto</div></div>
-          <div class="pipe-n">3</div>
-          <div class="pipe-bar"><div class="pipe-bar-fill" style="width:50%;background:#5C5B57"></div></div>
-        </div>
-        <div class="pipe-col">
-          <div class="pipe-header"><div class="pipe-dot" style="background:var(--purple)"></div><div class="pipe-name">Contactado</div></div>
-          <div class="pipe-n">3</div>
-          <div class="pipe-bar"><div class="pipe-bar-fill" style="width:50%;background:var(--purple)"></div></div>
-        </div>
-        <div class="pipe-col">
-          <div class="pipe-header"><div class="pipe-dot" style="background:var(--amber)"></div><div class="pipe-name">Demo</div></div>
-          <div class="pipe-n">1</div>
-          <div class="pipe-bar"><div class="pipe-bar-fill" style="width:17%;background:var(--amber)"></div></div>
-        </div>
-        <div class="pipe-col">
-          <div class="pipe-header"><div class="pipe-dot" style="background:var(--teal)"></div><div class="pipe-name">Propuesta</div></div>
-          <div class="pipe-n">0</div>
-          <div class="pipe-bar"><div class="pipe-bar-fill" style="width:0%;background:var(--teal)"></div></div>
-        </div>
-        <div class="pipe-col">
-          <div class="pipe-header"><div class="pipe-dot" style="background:var(--accent)"></div><div class="pipe-name">Cierre</div></div>
-          <div class="pipe-n">1</div>
-          <div class="pipe-bar"><div class="pipe-bar-fill" style="width:17%;background:var(--accent)"></div></div>
-        </div>
-      </div>
-
-      <div class="grid3">
-        <div class="card">
-          <div class="card-title">Seguimientos urgentes <span class="card-title-sub">hoy</span></div>
-          <div class="lead-item">
-            <div class="lead-av" style="background:rgba(255,107,107,0.12);color:#FF6B6B">AN</div>
-            <div class="lead-info">
-              <div class="lead-name">Agustín Neme</div>
-              <div class="lead-org">Partido Gral. Pueyrredon</div>
-              <div style="margin-top:5px;display:flex;gap:5px"><span class="tag tag-hot">Hot</span><span class="tag tag-warroom">Warroom</span></div>
-            </div>
-            <div class="lead-right">
-              <div class="lead-date">Hoy</div>
-              <div class="lead-action">Demo pendiente</div>
-            </div>
-          </div>
-          <div class="lead-item">
-            <div class="lead-av" style="background:rgba(255,107,107,0.12);color:#FF6B6B">PV</div>
-            <div class="lead-info">
-              <div class="lead-name">Pablo Verdecchia</div>
-              <div class="lead-org">Equipo Capozzi — Río Negro</div>
-              <div style="margin-top:5px;display:flex;gap:5px"><span class="tag tag-hot">Hot</span><span class="tag tag-warroom">Warroom</span></div>
-            </div>
-            <div class="lead-right">
-              <div class="lead-date">Vencida</div>
-              <div class="lead-action">Enviar propuesta</div>
-            </div>
-          </div>
-          <div class="lead-item">
-            <div class="lead-av" style="background:rgba(78,205,196,0.12);color:#4ECDC4">AJ</div>
-            <div class="lead-info">
-              <div class="lead-name">Agustina Jefremov</div>
-              <div class="lead-org">AES Energía</div>
-              <div style="margin-top:5px;display:flex;gap:5px"><span class="tag tag-warm">Warm</span><span class="tag tag-pa">Public Affairs</span></div>
-            </div>
-            <div class="lead-right">
-              <div class="lead-date">Mañana</div>
-              <div class="lead-action">Primer contacto</div>
-            </div>
-          </div>
-        </div>
-
-        <div class="card">
-          <div class="card-title">Revenue mensual</div>
-          <div class="rev-chart" id="rev-chart"></div>
-          <div style="display:flex;justify-content:space-between">
-            <span style="font-size:10px;color:var(--text-3)">Ene</span>
-            <span style="font-size:10px;color:var(--text-3)">Feb</span>
-            <span style="font-size:10px;color:var(--text-3)">Mar</span>
-            <span style="font-size:10px;color:var(--text-3)">Abr</span>
-            <span style="font-size:10px;color:var(--text-3)">May</span>
-          </div>
-          <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
-            <div>
-              <div style="font-size:11px;color:var(--text-3)">Objetivo mayo</div>
-              <div style="font-size:18px;font-family:'Syne',sans-serif;font-weight:700;color:var(--accent)">$6.200</div>
-            </div>
-            <div style="text-align:right">
-              <div style="font-size:11px;color:var(--text-3)">Alcanzado</div>
-              <div style="font-size:18px;font-family:'Syne',sans-serif;font-weight:700">$4.200</div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="card-title">Actividad reciente</div>
-        <div class="activity-item">
-          <div class="activity-icon" style="background:var(--accent-dim)">✉️</div>
-          <div class="activity-info"><div class="activity-title">Mail enviado — Lucas Palatnik</div><div class="activity-sub">Demo de Warroom agendada para el 27 may</div></div>
-          <div class="activity-time">Hace 2h</div>
-        </div>
-        <div class="activity-item">
-          <div class="activity-icon" style="background:var(--purple-dim)">🤝</div>
-          <div class="activity-info"><div class="activity-title">Cierre confirmado — Municipalidad Gral. Paz</div><div class="activity-sub">Warroom — USD 2.400/año. Factura emitida.</div></div>
-          <div class="activity-time">Ayer</div>
-        </div>
-        <div class="activity-item">
-          <div class="activity-icon" style="background:var(--teal-dim)">🔍</div>
-          <div class="activity-info"><div class="activity-title">Entrevista discovery — Juan Orlando</div><div class="activity-sub">Cefeidas Group · Public Affairs · 45 min</div></div>
-          <div class="activity-time">17 may</div>
-        </div>
-        <div class="activity-item">
-          <div class="activity-icon" style="background:var(--amber-dim)">📞</div>
-          <div class="activity-info"><div class="activity-title">Llamada — Federico Roveillard</div><div class="activity-sub">DOW · Sin respuesta · Intentar por mail</div></div>
-          <div class="activity-time">15 may</div>
-        </div>
-      </div>
+<!-- FACTURA MODAL -->
+<div class="overlay" id="fac-overlay">
+  <div class="modal">
+    <div class="modal-title" id="fac-modal-title">Nueva factura</div>
+    <div class="form-grid">
+      <div class="fg full"><label>Cliente</label><input type="text" id="ff-cliente" placeholder="Nombre del cliente o empresa"></div>
+      <div class="fg full"><label>Concepto</label><input type="text" id="ff-concepto" placeholder="Descripción del servicio"></div>
+      <div class="fg"><label>Monto</label><input type="number" id="ff-monto" placeholder="0"></div>
+      <div class="fg"><label>Moneda</label><select id="ff-moneda"><option value="USD">USD</option><option value="ARS">ARS</option></select></div>
+      <div class="fg"><label>Fecha emisión</label><input type="date" id="ff-emision"></div>
+      <div class="fg"><label>Fecha vencimiento</label><input type="date" id="ff-vence"></div>
+      <div class="fg"><label>Estado</label><select id="ff-estado"><option>Pendiente</option><option>Cobrado</option><option>Vencido</option><option>Cancelado</option></select></div>
+      <div class="fg"><label>Producto</label><select id="ff-producto"><option value="warroom">Warroom</option><option value="public_affairs">Public Affairs</option></select></div>
+      <div class="fg full"><label>Notas</label><input type="text" id="ff-notas" placeholder="Referencia, número de factura, etc."></div>
     </div>
-
-    <!-- LEADS -->
-    <div class="page" id="page-leads">
-      <div class="page-header">
-        <div class="page-title">Pipeline de leads</div>
-        <div class="page-sub">6 contactos activos · 2 productos</div>
-      </div>
-      <div class="card">
-        <div class="card-title">Todos los leads</div>
-        <div class="lead-item">
-          <div class="lead-av" style="background:rgba(255,107,107,0.12);color:#FF6B6B">AN</div>
-          <div class="lead-info"><div class="lead-name">Agustín Neme</div><div class="lead-org">Partido Gral. Pueyrredon — Mar del Plata</div><div style="margin-top:5px;display:flex;gap:5px"><span class="tag tag-hot">Hot</span><span class="tag tag-warroom">Warroom</span><span class="tag tag-etapa">Contactado</span></div></div>
-          <div class="lead-right"><div class="lead-date">25 may</div><div class="lead-action">Demo de la plataforma</div></div>
-        </div>
-        <div class="lead-item">
-          <div class="lead-av" style="background:rgba(255,107,107,0.12);color:#FF6B6B">PV</div>
-          <div class="lead-info"><div class="lead-name">Pablo Verdecchia</div><div class="lead-org">Equipo Capozzi — Río Negro</div><div style="margin-top:5px;display:flex;gap:5px"><span class="tag tag-hot">Hot</span><span class="tag tag-warroom">Warroom</span><span class="tag tag-etapa">Contactado</span></div></div>
-          <div class="lead-right"><div class="lead-date" style="color:var(--red)">Vencida</div><div class="lead-action">Enviar propuesta</div></div>
-        </div>
-        <div class="lead-item">
-          <div class="lead-av" style="background:rgba(139,127,247,0.12);color:#8B7FF7">LP</div>
-          <div class="lead-info"><div class="lead-name">Lucas Palatnik</div><div class="lead-org">Equipo Bullrich — Senadora CABA</div><div style="margin-top:5px;display:flex;gap:5px"><span class="tag tag-warm">Warm</span><span class="tag tag-warroom">Warroom</span><span class="tag tag-etapa">Contactado</span></div></div>
-          <div class="lead-right"><div class="lead-date">27 may</div><div class="lead-action">Agendar demo</div></div>
-        </div>
-        <div class="lead-item">
-          <div class="lead-av" style="background:rgba(78,205,196,0.12);color:#4ECDC4">AJ</div>
-          <div class="lead-info"><div class="lead-name">Agustina Jefremov</div><div class="lead-org">AES Energía</div><div style="margin-top:5px;display:flex;gap:5px"><span class="tag tag-warm">Warm</span><span class="tag tag-pa">Public Affairs</span><span class="tag tag-etapa">Prospecto</span></div></div>
-          <div class="lead-right"><div class="lead-date">26 may</div><div class="lead-action">Primer contacto</div></div>
-        </div>
-        <div class="lead-item">
-          <div class="lead-av" style="background:rgba(78,205,196,0.12);color:#4ECDC4">JO</div>
-          <div class="lead-info"><div class="lead-name">Juan Ignacio Orlando</div><div class="lead-org">Cefeidas Group</div><div style="margin-top:5px;display:flex;gap:5px"><span class="tag tag-warm">Warm</span><span class="tag tag-pa">Public Affairs</span><span class="tag tag-etapa">Prospecto</span></div></div>
-          <div class="lead-right"><div class="lead-date">28 may</div><div class="lead-action">Enviar deck</div></div>
-        </div>
-        <div class="lead-item">
-          <div class="lead-av" style="background:rgba(139,127,247,0.12);color:#8B7FF7">FR</div>
-          <div class="lead-info"><div class="lead-name">Federico Roveillard</div><div class="lead-org">DOW</div><div style="margin-top:5px;display:flex;gap:5px"><span class="tag tag-cold">Cold</span><span class="tag tag-pa">Public Affairs</span><span class="tag tag-etapa">Prospecto</span></div></div>
-          <div class="lead-right"><div class="lead-date">2 jun</div><div class="lead-action">Follow-up</div></div>
-        </div>
-      </div>
+    <div class="modal-footer">
+      <button class="btn btn-danger btn-sm" id="fac-del-btn" onclick="deleteFactura()" style="display:none;margin-right:auto">Eliminar</button>
+      <button class="btn btn-sm" onclick="closeOverlay('fac-overlay')">Cancelar</button>
+      <button class="btn btn-accent btn-sm" onclick="saveFactura()">Guardar</button>
     </div>
+  </div>
+</div>
 
-    <!-- FACTURACIÓN -->
-    <div class="page" id="page-facturacion">
-      <div class="page-header">
-        <div class="page-title">Facturación</div>
-        <div class="page-sub">Revenue real y proyectado por cliente</div>
-      </div>
-      <div class="metrics">
-        <div class="met">
-          <div class="met-label">Cobrado mayo</div>
-          <div class="met-value" style="color:var(--accent)">$2.400</div>
-          <div class="met-sub">1 factura cobrada</div>
-        </div>
-        <div class="met">
-          <div class="met-label">Por cobrar</div>
-          <div class="met-value" style="color:var(--amber)">$2.800</div>
-          <div class="met-sub">3 facturas pendientes</div>
-        </div>
-        <div class="met">
-          <div class="met-label">Vencido</div>
-          <div class="met-value" style="color:var(--red)">$600</div>
-          <div class="met-sub">1 factura vencida</div>
-        </div>
-        <div class="met">
-          <div class="met-label">ARR proyectado</div>
-          <div class="met-value" style="color:var(--purple)">$38k</div>
-          <div class="met-delta up">↑ pipeline actual</div>
-        </div>
-      </div>
-      <div class="grid2">
-        <div class="card">
-          <div class="card-title">Facturas mayo 2026</div>
-          <div class="factura-row">
-            <div class="factura-info"><div class="factura-nombre">Municipalidad Gral. Paz — Warroom</div><div class="factura-fecha">Emitida 15 may · anual</div></div>
-            <div><div class="factura-monto" style="color:var(--accent)">USD 2.400</div><div class="factura-status fs-cobrado">Cobrado</div></div>
-          </div>
-          <div class="factura-row">
-            <div class="factura-info"><div class="factura-nombre">Remax Belgrano — Capacitación IA</div><div class="factura-fecha">Vence 22 may</div></div>
-            <div><div class="factura-monto" style="color:var(--amber)">$350.000</div><div class="factura-status fs-pendiente">Pendiente</div></div>
-          </div>
-          <div class="factura-row">
-            <div class="factura-info"><div class="factura-nombre">SH Podcast — Pauta Brand X</div><div class="factura-fecha">Vence 1 jun</div></div>
-            <div><div class="factura-monto" style="color:var(--amber)">$880.000</div><div class="factura-status fs-pendiente">Pendiente</div></div>
-          </div>
-          <div class="factura-row">
-            <div class="factura-info"><div class="factura-nombre">MDP — Podcast</div><div class="factura-fecha">Venció 10 may</div></div>
-            <div><div class="factura-monto" style="color:var(--red)">$350.000</div><div class="factura-status fs-vencido">Vencida</div></div>
-          </div>
-        </div>
-        <div class="card">
-          <div class="card-title">Revenue por producto</div>
-          <div class="obj-item">
-            <div class="obj-header"><div class="obj-label">🗡️ Warroom</div><div class="obj-val">USD <span>2.400</span> / 5.000</div></div>
-            <div class="obj-track"><div class="obj-fill" style="width:48%;background:var(--accent)"></div></div>
-            <div class="obj-sub">1 cliente activo · ARR USD 2.400</div>
-          </div>
-          <div class="obj-item">
-            <div class="obj-header"><div class="obj-label">🔍 Public Affairs</div><div class="obj-val">USD <span>0</span> / 3.000</div></div>
-            <div class="obj-track"><div class="obj-fill" style="width:0%;background:var(--teal)"></div></div>
-            <div class="obj-sub">En discovery · primeros cierres Q3</div>
-          </div>
-          <div class="obj-item">
-            <div class="obj-header"><div class="obj-label">🎙️ Podcast + Remax</div><div class="obj-val">$1.230.000 / $2.000.000</div></div>
-            <div class="obj-track"><div class="obj-fill" style="width:61%;background:var(--purple)"></div></div>
-            <div class="obj-sub">Ingresos ARS combinados</div>
-          </div>
-        </div>
-      </div>
+<!-- OBJETIVO MODAL -->
+<div class="overlay" id="obj-overlay">
+  <div class="modal">
+    <div class="modal-title" id="obj-modal-title">Nuevo objetivo</div>
+    <div class="form-grid">
+      <div class="fg full"><label>Descripción</label><input type="text" id="fo-desc" placeholder="Ej: Cierres Warroom mayo"></div>
+      <div class="fg"><label>Valor actual</label><input type="number" id="fo-actual" placeholder="0"></div>
+      <div class="fg"><label>Meta</label><input type="number" id="fo-meta" placeholder="0"></div>
+      <div class="fg"><label>Unidad</label><input type="text" id="fo-unidad" placeholder="cierres, USD, demos..."></div>
+      <div class="fg"><label>Período</label><input type="text" id="fo-periodo" placeholder="Mayo 2026, Q2 2026..."></div>
+      <div class="fg"><label>Color</label><select id="fo-color"><option value="accent">Verde</option><option value="teal">Teal</option><option value="purple">Púrpura</option><option value="amber">Ámbar</option></select></div>
     </div>
-
-    <!-- OBJETIVOS -->
-    <div class="page" id="page-objetivos">
-      <div class="page-header">
-        <div class="page-title">Objetivos</div>
-        <div class="page-sub">Metas mensuales y trimestrales · Mayo 2026</div>
-      </div>
-      <div class="grid2">
-        <div class="card">
-          <div class="card-title">Ventas — mayo</div>
-          <div class="obj-item">
-            <div class="obj-header"><div class="obj-label">Cierres Warroom</div><div class="obj-val"><span>1</span> / 3</div></div>
-            <div class="obj-track"><div class="obj-fill" style="width:33%;background:var(--accent)"></div></div>
-            <div class="obj-sub">Quedan 2 · 12 días hábiles</div>
-          </div>
-          <div class="obj-item">
-            <div class="obj-header"><div class="obj-label">Demos Public Affairs</div><div class="obj-val"><span>0</span> / 3</div></div>
-            <div class="obj-track"><div class="obj-fill" style="width:0%;background:var(--teal)"></div></div>
-            <div class="obj-sub">Arranca con leads actuales</div>
-          </div>
-          <div class="obj-item">
-            <div class="obj-header"><div class="obj-label">Revenue total USD</div><div class="obj-val">USD <span>2.400</span> / 6.200</div></div>
-            <div class="obj-track"><div class="obj-fill" style="width:39%;background:var(--purple)"></div></div>
-            <div class="obj-sub">Falta USD 3.800 · pipeline cubre USD 4.200</div>
-          </div>
-          <div class="obj-item">
-            <div class="obj-header"><div class="obj-label">Entrevistas discovery PA</div><div class="obj-val"><span>3</span> / 5</div></div>
-            <div class="obj-track"><div class="obj-fill" style="width:60%;background:var(--amber)"></div></div>
-            <div class="obj-sub">2 más para completar sprint</div>
-          </div>
-        </div>
-        <div class="card">
-          <div class="card-title">Trimestre Q2 2026</div>
-          <div class="obj-item">
-            <div class="obj-header"><div class="obj-label">Nuevos clientes Warroom</div><div class="obj-val"><span>1</span> / 5</div></div>
-            <div class="obj-track"><div class="obj-fill" style="width:20%;background:var(--accent)"></div></div>
-            <div class="obj-sub">Elecciones 2027 · ventana activa</div>
-          </div>
-          <div class="obj-item">
-            <div class="obj-header"><div class="obj-label">MVP Public Affairs</div><div class="obj-val"><span>30%</span> / 100%</div></div>
-            <div class="obj-track"><div class="obj-fill" style="width:30%;background:var(--teal)"></div></div>
-            <div class="obj-sub">Discovery → definición → prototipo</div>
-          </div>
-          <div class="obj-item">
-            <div class="obj-header"><div class="obj-label">ARR objetivo anual</div><div class="obj-val">USD <span>2.4k</span> / 24k</div></div>
-            <div class="obj-track"><div class="obj-fill" style="width:10%;background:var(--purple)"></div></div>
-            <div class="obj-sub">10% completado · ritmo: 1 cliente/mes</div>
-          </div>
-        </div>
-      </div>
+    <div class="modal-footer">
+      <button class="btn btn-danger btn-sm" id="obj-del-btn" onclick="deleteObjetivo()" style="display:none;margin-right:auto">Eliminar</button>
+      <button class="btn btn-sm" onclick="closeOverlay('obj-overlay')">Cancelar</button>
+      <button class="btn btn-accent btn-sm" onclick="saveObjetivo()">Guardar</button>
     </div>
+  </div>
+</div>
 
-    <!-- WARROOM -->
-    <div class="page" id="page-warroom">
-      <div class="page-header">
-        <div class="page-title">Warroom</div>
-        <div class="page-sub">Plataforma para equipos de comunicación política en campaña</div>
-      </div>
-      <div class="prod-hero prod-hero-warroom">
-        <div class="prod-hero-bg prod-hero-bg-ww"></div>
-        <div class="prod-badge prod-badge-ww"><div class="prod-status-dot prod-status-dot-ww"></div>Producto activo · En mejora</div>
-        <div class="prod-title">Warroom</div>
-        <div class="prod-desc">Plataforma de gestión para equipos de comunicación política en campaña. Centraliza operaciones, distribución de contenido, monitoreo y coordinación de equipos en tiempo real.</div>
-        <div class="prod-meta">
-          <div class="prod-meta-item"><div class="prod-meta-label">Estado</div><div class="prod-meta-val" style="color:var(--accent)">Desarrollado ✓</div></div>
-          <div class="prod-meta-item"><div class="prod-meta-label">Clientes activos</div><div class="prod-meta-val">1</div></div>
-          <div class="prod-meta-item"><div class="prod-meta-label">ARR</div><div class="prod-meta-val">USD 2.400</div></div>
-          <div class="prod-meta-item"><div class="prod-meta-label">Modelo</div><div class="prod-meta-val">SaaS anual</div></div>
-          <div class="prod-meta-item"><div class="prod-meta-label">Precio</div><div class="prod-meta-val">USD 2.400/año</div></div>
-        </div>
-      </div>
-
-      <div class="grid2">
-        <div class="card">
-          <div class="card-title">Features actuales <span class="card-title-sub">desarrolladas</span></div>
-          <div class="feat-list">
-            <div class="feat-item"><div class="feat-check feat-check-done">✓</div><div class="feat-text"><strong>Dashboard de campaña</strong> — vista general de operaciones y estado del equipo</div></div>
-            <div class="feat-item"><div class="feat-check feat-check-done">✓</div><div class="feat-text"><strong>Distribución de contenido</strong> — publicación coordinada en múltiples canales</div></div>
-            <div class="feat-item"><div class="feat-check feat-check-done">✓</div><div class="feat-text"><strong>Gestión de equipo</strong> — roles, tareas y asignación por área</div></div>
-            <div class="feat-item"><div class="feat-check feat-check-done">✓</div><div class="feat-text"><strong>Monitoreo de menciones</strong> — seguimiento de conversaciones clave</div></div>
-            <div class="feat-item"><div class="feat-check feat-check-wip">→</div><div class="feat-text"><strong>Analytics avanzado</strong> — métricas de alcance e impacto en tiempo real</div></div>
-            <div class="feat-item"><div class="feat-check feat-check-wip">→</div><div class="feat-text"><strong>Integración IA</strong> — sugerencias de contenido y detección de crisis</div></div>
-            <div class="feat-item"><div class="feat-check feat-check-pending">○</div><div class="feat-text"><strong>App móvil</strong> — operaciones desde campo para coordinadores</div></div>
-            <div class="feat-item"><div class="feat-check feat-check-pending">○</div><div class="feat-text"><strong>Módulo de debate</strong> — prep y respuesta rápida en tiempo real</div></div>
-          </div>
-        </div>
-        <div class="card">
-          <div class="card-title">Leads activos para Warroom</div>
-          <div class="lead-item">
-            <div class="lead-av" style="background:rgba(255,107,107,0.12);color:#FF6B6B">AN</div>
-            <div class="lead-info"><div class="lead-name">Agustín Neme</div><div class="lead-org">Gral. Pueyrredon</div></div>
-            <div class="lead-right"><span class="tag tag-hot">Hot</span></div>
-          </div>
-          <div class="lead-item">
-            <div class="lead-av" style="background:rgba(255,107,107,0.12);color:#FF6B6B">PV</div>
-            <div class="lead-info"><div class="lead-name">Pablo Verdecchia</div><div class="lead-org">Equipo Capozzi</div></div>
-            <div class="lead-right"><span class="tag tag-hot">Hot</span></div>
-          </div>
-          <div class="lead-item">
-            <div class="lead-av" style="background:rgba(139,127,247,0.12);color:#8B7FF7">LP</div>
-            <div class="lead-info"><div class="lead-name">Lucas Palatnik</div><div class="lead-org">Equipo Bullrich</div></div>
-            <div class="lead-right"><span class="tag tag-warm">Warm</span></div>
-          </div>
-          <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border)">
-            <div style="font-size:11px;color:var(--text-3);margin-bottom:8px">Contexto comercial</div>
-            <div style="font-size:12px;color:var(--text-2);line-height:1.6">Elecciones 2027 activan la demanda desde Q3 2026. Ventana comercial clave: próximos 6 meses. Foco en equipos de campaña nacional y provincial.</div>
-          </div>
-        </div>
-      </div>
+<!-- FEATURE MODAL -->
+<div class="overlay" id="feat-overlay">
+  <div class="modal">
+    <div class="modal-title" id="feat-modal-title">Nueva feature</div>
+    <div class="form-grid">
+      <div class="fg full"><label>Nombre</label><input type="text" id="ff2-nombre" placeholder="Nombre de la feature"></div>
+      <div class="fg full"><label>Descripción</label><textarea id="ff2-desc" placeholder="Qué hace esta feature..."></textarea></div>
+      <div class="fg"><label>Estado</label><select id="ff2-estado"><option value="done">✓ Desarrollada</option><option value="wip">→ En desarrollo</option><option value="todo">○ Pendiente</option></select></div>
+      <div class="fg"><label>Producto</label><select id="ff2-prod"><option value="warroom">Warroom</option><option value="public_affairs">Public Affairs</option></select></div>
     </div>
-
-    <!-- PUBLIC AFFAIRS -->
-    <div class="page" id="page-publicaffairs">
-      <div class="page-header">
-        <div class="page-title">Public Affairs</div>
-        <div class="page-sub">Plataforma para gestión de asuntos públicos corporativos</div>
-      </div>
-      <div class="prod-hero prod-hero-pa">
-        <div class="prod-hero-bg prod-hero-bg-pa"></div>
-        <div class="prod-badge prod-badge-pa"><div class="prod-status-dot prod-status-dot-pa"></div>En Discovery · Sprint activo</div>
-        <div class="prod-title">Public Affairs</div>
-        <div class="prod-desc">Plataforma para empresas y organizaciones que necesitan gestionar sus relaciones con el sector público. Monitoreo legislativo, mapeo de actores, gestión de incidencias y reportes de impacto.</div>
-        <div class="prod-meta">
-          <div class="prod-meta-item"><div class="prod-meta-label">Etapa</div><div class="prod-meta-val" style="color:var(--teal)">Discovery</div></div>
-          <div class="prod-meta-item"><div class="prod-meta-label">Entrevistas</div><div class="prod-meta-val">3 / 5</div></div>
-          <div class="prod-meta-item"><div class="prod-meta-label">Leads calificados</div><div class="prod-meta-val">3</div></div>
-          <div class="prod-meta-item"><div class="prod-meta-label">Target</div><div class="prod-meta-val">Corporativo B2B</div></div>
-          <div class="prod-meta-item"><div class="prod-meta-label">Precio estimado</div><div class="prod-meta-val">USD 3.000/año</div></div>
-        </div>
-      </div>
-
-      <div class="grid2">
-        <div class="card">
-          <div class="card-title">Roadmap de discovery</div>
-          <div class="discovery-track">
-            <div class="disc-phase">
-              <div class="disc-num disc-done">✓</div>
-              <div class="disc-info"><div class="disc-title">Hipótesis inicial</div><div class="disc-desc">Definición del problema, perfil de cliente objetivo y primeras hipótesis de valor</div></div>
-              <div class="disc-right">Completado</div>
-            </div>
-            <div class="disc-phase">
-              <div class="disc-num disc-done">✓</div>
-              <div class="disc-info"><div class="disc-title">Entrevistas exploratorias</div><div class="disc-desc">3 de 5 entrevistas realizadas con referentes de asuntos públicos (AES, Cefeidas, DOW)</div></div>
-              <div class="disc-right">3/5 done</div>
-            </div>
-            <div class="disc-phase">
-              <div class="disc-num disc-active">→</div>
-              <div class="disc-info"><div class="disc-title">Síntesis y patrones</div><div class="disc-desc">Análisis de insights, identificación de jobs-to-be-done y pain points recurrentes</div></div>
-              <div class="disc-right" style="color:var(--amber)">En curso</div>
-            </div>
-            <div class="disc-phase">
-              <div class="disc-num disc-todo">4</div>
-              <div class="disc-info"><div class="disc-title">Definición de MVP</div><div class="disc-desc">Feature set mínimo validado, priorización y roadmap técnico inicial</div></div>
-              <div class="disc-right">Próximo</div>
-            </div>
-            <div class="disc-phase">
-              <div class="disc-num disc-todo">5</div>
-              <div class="disc-info"><div class="disc-title">Prototipo y validación</div><div class="disc-desc">Wireframes de alta fidelidad, testing con primeros clientes potenciales</div></div>
-              <div class="disc-right">Q3 2026</div>
-            </div>
-          </div>
-        </div>
-        <div class="card">
-          <div class="card-title">Leads en discovery</div>
-          <div class="lead-item">
-            <div class="lead-av" style="background:rgba(78,205,196,0.12);color:#4ECDC4">AJ</div>
-            <div class="lead-info"><div class="lead-name">Agustina Jefremov</div><div class="lead-org">AES Energía</div><div style="margin-top:5px"><span class="tag tag-warm">Warm</span></div></div>
-            <div class="lead-right"><div class="lead-date">26 may</div><div class="lead-action">Entrevista pendiente</div></div>
-          </div>
-          <div class="lead-item">
-            <div class="lead-av" style="background:rgba(78,205,196,0.12);color:#4ECDC4">JO</div>
-            <div class="lead-info"><div class="lead-name">Juan Ignacio Orlando</div><div class="lead-org">Cefeidas Group</div><div style="margin-top:5px"><span class="tag tag-warm">Warm</span></div></div>
-            <div class="lead-right"><div class="lead-date">Entrevistado</div><div class="lead-action">Muy interesado</div></div>
-          </div>
-          <div class="lead-item">
-            <div class="lead-av" style="background:rgba(139,127,247,0.12);color:#8B7FF7">FR</div>
-            <div class="lead-info"><div class="lead-name">Federico Roveillard</div><div class="lead-org">DOW</div><div style="margin-top:5px"><span class="tag tag-cold">Cold</span></div></div>
-            <div class="lead-right"><div class="lead-date">Entrevistado</div><div class="lead-action">Ciclo largo</div></div>
-          </div>
-          <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border)">
-            <div style="font-size:11px;color:var(--text-3);margin-bottom:8px">Insights clave hasta ahora</div>
-            <div style="font-size:12px;color:var(--text-2);line-height:1.6">Las empresas usan Excel + WhatsApp para gestionar sus asuntos públicos. El mayor dolor es el monitoreo legislativo y la falta de trazabilidad en las gestiones.</div>
-          </div>
-        </div>
-      </div>
+    <div class="modal-footer">
+      <button class="btn btn-danger btn-sm" id="feat-del-btn" onclick="deleteFeat()" style="display:none;margin-right:auto">Eliminar</button>
+      <button class="btn btn-sm" onclick="closeOverlay('feat-overlay')">Cancelar</button>
+      <button class="btn btn-accent btn-sm" onclick="saveFeat()">Guardar</button>
     </div>
+  </div>
+</div>
 
+<!-- DISCOVERY MODAL -->
+<div class="overlay" id="disc-overlay">
+  <div class="modal">
+    <div class="modal-title" id="disc-modal-title">Nueva etapa</div>
+    <div class="form-grid">
+      <div class="fg full"><label>Título</label><input type="text" id="fd-titulo" placeholder="Ej: Entrevistas exploratorias"></div>
+      <div class="fg full"><label>Descripción</label><textarea id="fd-desc" placeholder="Detalle de la etapa..."></textarea></div>
+      <div class="fg"><label>Estado</label><select id="fd-estado"><option value="done">✓ Completado</option><option value="active">→ En curso</option><option value="todo">○ Pendiente</option></select></div>
+      <div class="fg"><label>Período / Fecha</label><input type="text" id="fd-fecha" placeholder="Ej: Q2 2026"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-danger btn-sm" id="disc-del-btn" onclick="deleteDisc()" style="display:none;margin-right:auto">Eliminar</button>
+      <button class="btn btn-sm" onclick="closeOverlay('disc-overlay')">Cancelar</button>
+      <button class="btn btn-accent btn-sm" onclick="saveDisc()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- PROD INFO MODAL -->
+<div class="overlay" id="prod-overlay">
+  <div class="modal">
+    <div class="modal-title" id="prod-modal-title">Info del producto</div>
+    <div class="form-grid">
+      <div class="fg full"><label>Descripción</label><textarea id="fp-desc" placeholder="Descripción del producto..."></textarea></div>
+      <div class="fg"><label>Estado</label><input type="text" id="fp-estado" placeholder="Ej: En desarrollo, Activo..."></div>
+      <div class="fg"><label>Precio (USD/año)</label><input type="number" id="fp-precio" placeholder="0"></div>
+      <div class="fg"><label>Modelo de negocio</label><input type="text" id="fp-modelo" placeholder="SaaS anual, por usuario..."></div>
+      <div class="fg"><label>Clientes activos</label><input type="number" id="fp-clientes" placeholder="0"></div>
+      <div class="fg"><label>ARR (USD)</label><input type="number" id="fp-arr" placeholder="0"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-sm" onclick="closeOverlay('prod-overlay')">Cancelar</button>
+      <button class="btn btn-accent btn-sm" onclick="saveProdInfo()">Guardar</button>
+    </div>
   </div>
 </div>
 
 <div class="toast" id="toast"></div>
 
 <script>
-const titles = { dashboard:'Dashboard', leads:'Pipeline de leads', facturacion:'Facturación', objetivos:'Objetivos', warroom:'Warroom', publicaffairs:'Public Affairs' };
+// ── CONFIG ──────────────────────────────────────────────────
+const SURL='https://ebrtpohmcmabtdqyrqtl.supabase.co';
+const SKEY='sb_publishable_46IdjeFhjQLMXTKshOZQIQ_l4DiG3G-';
+const {createClient}=supabase;
+const db=createClient(SURL,SKEY);
 
-function showPage(id, btn) {
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
-  document.getElementById('page-' + id).classList.add('active');
-  btn.classList.add('active');
-  document.getElementById('topbar-title').textContent = titles[id];
+// ── STATE ────────────────────────────────────────────────────
+let leads=[],facturas=[],objetivos=[],features=[],discovery=[],prodInfo={warroom:{},public_affairs:{}};
+let currentFilter='todos',editLeadId=null,editFacId=null,editObjId=null,editFeatId=null,editDiscId=null,editProdKey=null,mailLeadId=null,mailType='primer_contacto';
+let currentUser=null;
+
+// ── AUTH ─────────────────────────────────────────────────────
+async function initAuth(){
+  const{data:{session}}=await db.auth.getSession();
+  if(session){currentUser=session.user;showApp();}else{showLogin();}
+  db.auth.onAuthStateChange((e,s)=>{if(s){currentUser=s.user;showApp();}else{showLogin();}});
+}
+function showLogin(){document.getElementById('login-screen').style.display='flex';document.getElementById('app').style.display='none';}
+function showApp(){
+  document.getElementById('login-screen').style.display='none';
+  document.getElementById('app').style.display='block';
+  const em=currentUser.email;
+  document.getElementById('sb-email').textContent=em;
+  document.getElementById('sb-av').textContent=em.substring(0,2).toUpperCase();
+  loadAll();
+}
+async function doLogin(){
+  const em=document.getElementById('l-email').value.trim(),pw=document.getElementById('l-pass').value;
+  const btn=document.getElementById('l-btn'),err=document.getElementById('l-err');
+  if(!em||!pw){showErr(err,'Completá email y contraseña');return;}
+  btn.disabled=true;btn.textContent='Ingresando...';err.style.display='none';
+  const{error}=await db.auth.signInWithPassword({email:em,password:pw});
+  if(error){showErr(err,'Email o contraseña incorrectos');btn.disabled=false;btn.textContent='Ingresar →';}
+}
+async function doLogout(){await db.auth.signOut();}
+function showErr(el,msg){el.textContent=msg;el.style.display='block';}
+
+// ── LOAD ─────────────────────────────────────────────────────
+async function loadAll(){
+  await Promise.all([loadLeads(),loadFacturas(),loadObjetivos(),loadFeatures(),loadDiscovery(),loadProdInfo()]);
+  renderDashboard();checkTodayAuto();
+}
+async function loadLeads(){const{data}=await db.from('leads').select('*').order('created_at',{ascending:false});leads=data||[];}
+async function loadFacturas(){const{data}=await db.from('facturas').select('*').order('created_at',{ascending:false}).catch(()=>({data:[]}));facturas=data||[];}
+async function loadObjetivos(){const{data}=await db.from('objetivos').select('*').order('created_at',{ascending:true}).catch(()=>({data:[]}));objetivos=data||[];}
+async function loadFeatures(){const{data}=await db.from('features').select('*').order('created_at',{ascending:true}).catch(()=>({data:[]}));features=data||[];}
+async function loadDiscovery(){const{data}=await db.from('discovery').select('*').order('orden',{ascending:true}).catch(()=>({data:[]}));discovery=data||[];}
+async function loadProdInfo(){const{data}=await db.from('prod_info').select('*').catch(()=>({data:[]}));if(data){data.forEach(r=>{prodInfo[r.key]=r;});}}
+
+// ── NAV ──────────────────────────────────────────────────────
+const pageTitles={dashboard:'Dashboard',leads:'Leads',facturacion:'Facturación',objetivos:'Objetivos',warroom:'Warroom',publicaffairs:'Public Affairs'};
+function nav(id,btn){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.sb-item,.mn-item').forEach(b=>b.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  if(btn)btn.classList.add('active');
+  document.getElementById('topbar-title').textContent=pageTitles[id]||id;
+  if(id==='leads')renderLeads();
+  if(id==='facturacion')renderFacturacion();
+  if(id==='objetivos')renderObjetivos();
+  if(id==='warroom')renderWarroom();
+  if(id==='publicaffairs')renderPA();
 }
 
-function showToast(msg) {
-  const t = document.getElementById('toast');
-  t.textContent = msg; t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 2500);
+// ── HELPERS ──────────────────────────────────────────────────
+function today(){const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
+function fmtDate(d){if(!d)return '—';const p=(d.split('T')[0]||d).split('-');const mo='ene feb mar abr may jun jul ago sep oct nov dic'.split(' ');return `${parseInt(p[2])} ${mo[parseInt(p[1])-1]}`;}
+function initials(n){return(n||'??').split(' ').slice(0,2).map(w=>w[0]||'').join('').toUpperCase();}
+function avStyle(p){return p==='warroom'?'background:rgba(200,240,101,.12);color:#C8F065':'background:rgba(78,205,196,.12);color:#4ECDC4';}
+function tempTag(t){const m={hot:'tag-hot Hot',warm:'tag-warm Warm',cold:'tag-cold Cold'};const[cls,lb]=(m[t]||'tag-cold Cold').split(' ');return `<span class="tag ${cls}">${lb}</span>`;}
+function prodTag(p){return p==='warroom'?`<span class="tag tag-ww">Warroom</span>`:`<span class="tag tag-pa">Public Affairs</span>`;}
+function stageTag(e){return `<span class="tag tag-stage">${e}</span>`;}
+function getCardCls(l){const t=today(),f=l.fecha?(l.fecha.split('T')[0]):'';if(f&&f<t&&l.etapa!=='Cierre')return 'lead-card urgent';if(f===t)return 'lead-card today';return 'lead-card';}
+function formatMoney(m,cur){if(!m)return '—';return (cur||'')===('USD')?`USD ${Number(m).toLocaleString()}`:`$${Number(m).toLocaleString('es-AR')}`;}
+function statusBadge(s){const m={Cobrado:'background:rgba(200,240,101,.12);color:#C8F065',Pendiente:'background:rgba(255,184,76,.12);color:#FFB84C',Vencido:'background:rgba(255,107,107,.12);color:#FF6B6B',Cancelado:'background:rgba(92,91,87,.2);color:#9B9A94'};return `<span class="tag" style="${m[s]||m.Pendiente}">${s}</span>`;}
+function colorVal(c){const m={accent:'var(--accent)',teal:'var(--teal)',purple:'var(--purple)',amber:'var(--amber)'};return m[c]||m.accent;}
+
+// ── OVERLAYS ─────────────────────────────────────────────────
+function closeOverlay(id){document.getElementById(id).classList.remove('open');}
+document.querySelectorAll('.overlay').forEach(o=>{o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('open');});});
+
+// ── TODAY ALERT ──────────────────────────────────────────────
+function checkTodayAuto(){
+  const t=today(),tl=leads.filter(l=>l.fecha&&l.fecha.split('T')[0]===t),ol=leads.filter(l=>l.fecha&&l.fecha.split('T')[0]<t&&l.etapa!=='Cierre');
+  if(!tl.length&&!ol.length)return;showAlertBar(tl,ol);
+  if('Notification'in window&&Notification.permission==='granted')new Notification('Poncho CRM',{body:`${tl.length+ol.length} tareas pendientes hoy`});
+  else if('Notification'in window&&Notification.permission!=='denied')Notification.requestPermission();
+}
+function checkToday(){
+  const t=today(),tl=leads.filter(l=>l.fecha&&l.fecha.split('T')[0]===t),ol=leads.filter(l=>l.fecha&&l.fecha.split('T')[0]<t&&l.etapa!=='Cierre');
+  if(!tl.length&&!ol.length){toast('No tenés tareas pendientes hoy 🎉');return;}showAlertBar(tl,ol);
+}
+function showAlertBar(tl,ol){
+  const n=tl.length+ol.length;
+  document.getElementById('alert-txt').textContent=`Tenés ${n} tarea${n>1?'s':''} pendiente${n>1?'s':''} hoy`;
+  document.getElementById('alert-tasks').innerHTML=[...tl.map(l=>`<span class="alert-task">${l.nombre}</span>`),...ol.map(l=>`<span class="alert-task v">${l.nombre} (vencida)</span>`)].join('');
+  document.getElementById('alert-bar').classList.remove('hidden');
 }
 
+// ── DASHBOARD ────────────────────────────────────────────────
+function renderDashboard(){
+  const t=today();
+  const hot=leads.filter(l=>l.temp==='hot').length;
+  const tareasHoy=leads.filter(l=>l.fecha&&l.fecha.split('T')[0]===t).length;
+  const cobrado=facturas.filter(f=>f.estado==='Cobrado').reduce((a,f)=>a+(f.moneda==='USD'?Number(f.monto):0),0);
+  const porcobrar=facturas.filter(f=>f.estado==='Pendiente').length;
+  document.getElementById('dash-metrics').innerHTML=[
+    ['Leads activos',leads.length,''],
+    ['Hot leads',hot,'color:var(--red)'],
+    ['Cobrado USD',`$${cobrado.toLocaleString()}`,'color:var(--accent)'],
+    ['Tareas hoy',tareasHoy,tareasHoy>0?'color:var(--amber)':''],
+  ].map(([l,v,s])=>`<div class="met"><div class="met-l">${l}</div><div class="met-v" style="${s}">${v}</div></div>`).join('');
 
-const SUPABASE_URL = 'https://ebrtpohmcmabtdqyrqtl.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_46IdjeFhjQLMXTKshOZQIQ_l4DiG3G-';
-const { createClient } = supabase;
-const db = createClient(SUPABASE_URL, SUPABASE_KEY);
-let currentUser = null;
+  const etapas=[['Prospecto','#5C5B57'],['Contactado','var(--purple)'],['Demo','var(--amber)'],['Propuesta','var(--teal)'],['Cierre','var(--accent)']];
+  document.getElementById('dash-pipeline').innerHTML=etapas.map(([e,c])=>{
+    const n=leads.filter(l=>l.etapa===e).length;
+    return `<div class="pc"><div class="pc-hd"><div class="pc-dot" style="background:${c}"></div><div class="pc-lbl">${e}</div></div><div class="pc-n">${n}</div></div>`;
+  }).join('');
 
-async function init() {
-  const { data: { session } } = await db.auth.getSession();
-  if (session) { currentUser = session.user; showApp(); }
-  else { showLogin(); }
-  db.auth.onAuthStateChange((event, session) => {
-    if (session) { currentUser = session.user; showApp(); }
-    else { showLogin(); }
+  const urgent=leads.filter(l=>l.fecha&&l.fecha.split('T')[0]<=t&&l.etapa!=='Cierre').slice(0,5);
+  if(!urgent.length){document.getElementById('dash-leads').innerHTML='<div class="empty">Sin tareas urgentes hoy 🎉</div>';return;}
+  document.getElementById('dash-leads').innerHTML=urgent.map(l=>`
+    <div class="${getCardCls(l)}">
+      <div class="lc-top">
+        <div class="lc-av" style="${avStyle(l.producto)}">${initials(l.nombre)}</div>
+        <div class="lc-info">
+          <div class="lc-name">${l.nombre}</div>
+          <div class="lc-org">${l.org||''}</div>
+          <div class="lc-tags">${prodTag(l.producto)}${tempTag(l.temp)}${stageTag(l.etapa)}</div>
+        </div>
+        <div class="lc-right"><div class="lc-date">${fmtDate(l.fecha)}</div><div class="lc-action">${l.accion||''}</div></div>
+      </div>
+      <div class="lc-btns">
+        <button class="card-btn mail" onclick="openMailModal(${l.id})">✉️ Mail</button>
+        <button class="card-btn edit" onclick="openLeadModal(${l.id})">Editar</button>
+      </div>
+    </div>`).join('');
+}
+
+// ── LEADS ────────────────────────────────────────────────────
+function filteredLeads(){
+  const q=(document.getElementById('search')||{}).value?.toLowerCase()||'';
+  const t=today();
+  return leads.filter(l=>{
+    const mf=currentFilter==='todos'||(currentFilter==='warroom'&&l.producto==='warroom')||(currentFilter==='public_affairs'&&l.producto==='public_affairs')||(currentFilter==='hot'&&l.temp==='hot')||(currentFilter==='warm'&&l.temp==='warm')||(currentFilter==='hoy'&&l.fecha&&l.fecha.split('T')[0]===t);
+    const ms=!q||l.nombre?.toLowerCase().includes(q)||(l.org||'').toLowerCase().includes(q);
+    return mf&&ms;
   });
 }
-
-function showLogin() {
-  document.getElementById('login-wrap').classList.add('visible');
-  document.getElementById('app-layout').style.display = 'none';
-  document.getElementById('app-main').style.display = 'none';
+function setFilter(f,btn){currentFilter=f;document.querySelectorAll('.fb').forEach(b=>b.classList.remove('active'));btn.classList.add('active');renderLeads();}
+function renderLeads(){
+  const data=filteredLeads();
+  const el=document.getElementById('leads-list');
+  if(!data.length){el.innerHTML='<div class="empty">No hay leads con ese filtro.</div>';return;}
+  el.innerHTML=data.map(l=>`
+    <div class="${getCardCls(l)}">
+      <div class="lc-top">
+        <div class="lc-av" style="${avStyle(l.producto)}">${initials(l.nombre)}</div>
+        <div class="lc-info">
+          <div class="lc-name">${l.nombre}</div>
+          <div class="lc-org">${l.org||''}</div>
+          <div class="lc-tags">${prodTag(l.producto)}${tempTag(l.temp)}${stageTag(l.etapa)}</div>
+        </div>
+        <div class="lc-right">
+          <div class="lc-date">${fmtDate(l.fecha)}</div>
+          <div class="lc-action">${l.accion||''}</div>
+        </div>
+      </div>
+      <div class="lc-btns">
+        <button class="card-btn mail" onclick="openMailModal(${l.id})">✉️ Mail</button>
+        <button class="card-btn edit" onclick="openLeadModal(${l.id})">Editar</button>
+      </div>
+    </div>`).join('');
 }
 
-function showApp() {
-  document.getElementById('login-wrap').classList.remove('visible');
-  document.getElementById('app-layout').style.display = 'flex';
-  document.getElementById('app-main').style.display = 'block';
-  // Mostrar email en sidebar
-  const userRow = document.querySelector('.user-name');
-  if (userRow) userRow.textContent = currentUser.email;
+// ── LEAD MODAL ───────────────────────────────────────────────
+function openLeadModal(id){
+  editLeadId=id;
+  document.getElementById('lead-modal-title').textContent=id?'Editar lead':'Nuevo lead';
+  document.getElementById('lead-del-btn').style.display=id?'inline-flex':'none';
+  if(id){
+    const l=leads.find(x=>x.id===id);
+    ['nombre','org','rol','email','tel','accion','notas'].forEach(k=>document.getElementById('f-'+k).value=l[k]||'');
+    document.getElementById('f-monto').value=l.monto||'';
+    document.getElementById('f-producto').value=l.producto||'warroom';
+    document.getElementById('f-etapa').value=l.etapa||'Prospecto';
+    document.getElementById('f-temp').value=l.temp||'warm';
+    document.getElementById('f-canal').value=l.canal||'WhatsApp';
+    document.getElementById('f-fecha').value=l.fecha?l.fecha.split('T')[0]:'';
+  } else {
+    ['nombre','org','rol','email','tel','accion','notas'].forEach(k=>document.getElementById('f-'+k).value='');
+    document.getElementById('f-monto').value='';
+    document.getElementById('f-producto').value='warroom';
+    document.getElementById('f-etapa').value='Prospecto';
+    document.getElementById('f-temp').value='warm';
+    document.getElementById('f-canal').value='WhatsApp';
+    document.getElementById('f-fecha').value='';
+  }
+  document.getElementById('lead-overlay').classList.add('open');
+}
+async function saveLead(){
+  const btn=document.getElementById('lead-save-btn');
+  const d={nombre:document.getElementById('f-nombre').value.trim(),org:document.getElementById('f-org').value.trim(),rol:document.getElementById('f-rol').value.trim(),email:document.getElementById('f-email').value.trim(),tel:document.getElementById('f-tel').value.trim(),producto:document.getElementById('f-producto').value,etapa:document.getElementById('f-etapa').value,temp:document.getElementById('f-temp').value,canal:document.getElementById('f-canal').value,accion:document.getElementById('f-accion').value.trim(),fecha:document.getElementById('f-fecha').value||null,monto:document.getElementById('f-monto').value,notas:document.getElementById('f-notas').value.trim(),updated_at:new Date().toISOString()};
+  if(!d.nombre){toast('Escribí el nombre');return;}
+  btn.disabled=true;
+  if(editLeadId){await db.from('leads').update(d).eq('id',editLeadId);}
+  else{await db.from('leads').insert(d);}
+  btn.disabled=false;
+  toast(editLeadId?'Lead actualizado ✓':'Lead agregado ✓');
+  closeOverlay('lead-overlay');
+  await loadLeads();renderLeads();renderDashboard();
+}
+async function deleteLead(){
+  if(!confirm('¿Eliminar este lead?'))return;
+  await db.from('leads').delete().eq('id',editLeadId);
+  toast('Lead eliminado');closeOverlay('lead-overlay');
+  await loadLeads();renderLeads();renderDashboard();
 }
 
-async function doLogin() {
-  const email = document.getElementById('login-email').value.trim();
-  const pass = document.getElementById('login-pass').value;
-  const btn = document.getElementById('login-btn');
-  const errEl = document.getElementById('login-error');
-  if (!email || !pass) { showLoginError('Completá email y contraseña'); return; }
-  btn.disabled = true; btn.textContent = 'Ingresando...'; errEl.style.display = 'none';
-  const { error } = await db.auth.signInWithPassword({ email, password: pass });
-  if (error) { showLoginError('Email o contraseña incorrectos'); btn.disabled = false; btn.textContent = 'Ingresar →'; }
+// ── MAIL ─────────────────────────────────────────────────────
+function openMailModal(id){
+  mailLeadId=id;
+  const l=leads.find(x=>x.id===id);
+  document.getElementById('mail-lead-name').textContent=l.nombre;
+  document.getElementById('mail-ctx').value='';
+  document.getElementById('mail-result').style.display='none';
+  document.getElementById('mail-loading').style.display='none';
+  document.querySelectorAll('.mtype').forEach((b,i)=>b.classList.toggle('sel',i===0));
+  mailType='primer_contacto';
+  document.getElementById('mail-overlay').classList.add('open');
+}
+function selMailType(btn,type){document.querySelectorAll('.mtype').forEach(b=>b.classList.remove('sel'));btn.classList.add('sel');mailType=type;}
+async function genMail(){
+  const l=leads.find(x=>x.id===mailLeadId);
+  const ctx=document.getElementById('mail-ctx').value.trim();
+  const ld=document.getElementById('mail-loading'),res=document.getElementById('mail-result'),gb=document.getElementById('mail-gen-btn');
+  ld.style.display='block';res.style.display='none';gb.disabled=true;
+  const types={primer_contacto:'primer contacto y presentación',follow_up:'follow-up sin respuesta',propuesta:'envío propuesta comercial',demo:'agendar demo',cierre:'avanzar al cierre',custom:ctx||'mail comercial'};
+  const p=`Sos el área comercial de Poncho Digital, empresa argentina de software político. Productos: Warroom (comunicación política en campaña) y Public Affairs (asuntos públicos corporativos).\n\nRedactá un mail comercial en español rioplatense, tono ejecutivo pero cercano.\n\nContacto: ${l.nombre} | ${l.org} | ${l.rol||''} | ${l.producto==='warroom'?'Warroom':'Public Affairs'} | Etapa: ${l.etapa}\nNotas: ${l.notas||'ninguna'}\nTipo: ${types[mailType]}\nContexto extra: ${ctx||'ninguno'}\n\nRespondé SOLO JSON sin markdown: {"subject":"asunto","body":"cuerpo con \\n"}`;
+  try{
+    const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,messages:[{role:'user',content:p}]})});
+    const data=await r.json();
+    const raw=data.content.map(c=>c.text||'').join('').replace(/```json|```/g,'').trim();
+    const parsed=JSON.parse(raw);
+    document.getElementById('mail-subj').textContent=parsed.subject;
+    document.getElementById('mail-body-txt').textContent=parsed.body;
+    ld.style.display='none';res.style.display='block';
+  }catch(e){ld.style.display='none';toast('Error al generar. Intentá de nuevo.');}
+  gb.disabled=false;
+}
+function copyMail(){const s=document.getElementById('mail-subj').textContent,b=document.getElementById('mail-body-txt').textContent;navigator.clipboard.writeText(`Asunto: ${s}\n\n${b}`).then(()=>toast('Mail copiado ✓'));}
+
+// ── FACTURACIÓN ──────────────────────────────────────────────
+function renderFacturacion(){
+  const total=facturas.filter(f=>f.estado==='Cobrado').reduce((a,f)=>a+(f.moneda==='USD'?Number(f.monto):0),0);
+  const pend=facturas.filter(f=>f.estado==='Pendiente');
+  const venc=facturas.filter(f=>f.estado==='Vencido').length;
+  document.getElementById('fac-metrics').innerHTML=[
+    ['Cobrado USD',`$${total.toLocaleString()}`,'color:var(--accent)'],
+    ['Pendiente',pend.length,'color:var(--amber)'],
+    ['Vencido',venc,'color:var(--red)'],
+    ['Total facturas',facturas.length,''],
+  ].map(([l,v,s])=>`<div class="met"><div class="met-l">${l}</div><div class="met-v" style="${s}">${v}</div></div>`).join('');
+
+  const tb=document.getElementById('fac-tbody');
+  if(!facturas.length){tb.innerHTML=`<tr><td colspan="6" class="empty">Sin facturas cargadas.</td></tr>`;return;}
+  tb.innerHTML=facturas.map(f=>`
+    <tr>
+      <td style="color:var(--text);font-weight:500">${f.cliente||'—'}</td>
+      <td>${f.concepto||'—'}</td>
+      <td><span style="font-family:'DM Mono',monospace">${formatMoney(f.monto,f.moneda)}</span></td>
+      <td>${fmtDate(f.fecha_vence)}</td>
+      <td>${statusBadge(f.estado)}</td>
+      <td><button class="card-btn edit" onclick="openFacturaModal(${f.id})">Editar</button></td>
+    </tr>`).join('');
+}
+function openFacturaModal(id){
+  editFacId=id;
+  document.getElementById('fac-modal-title').textContent=id?'Editar factura':'Nueva factura';
+  document.getElementById('fac-del-btn').style.display=id?'inline-flex':'none';
+  if(id){
+    const f=facturas.find(x=>x.id===id);
+    document.getElementById('ff-cliente').value=f.cliente||'';
+    document.getElementById('ff-concepto').value=f.concepto||'';
+    document.getElementById('ff-monto').value=f.monto||'';
+    document.getElementById('ff-moneda').value=f.moneda||'USD';
+    document.getElementById('ff-emision').value=f.fecha_emision?f.fecha_emision.split('T')[0]:'';
+    document.getElementById('ff-vence').value=f.fecha_vence?f.fecha_vence.split('T')[0]:'';
+    document.getElementById('ff-estado').value=f.estado||'Pendiente';
+    document.getElementById('ff-producto').value=f.producto||'warroom';
+    document.getElementById('ff-notas').value=f.notas||'';
+  } else {
+    ['ff-cliente','ff-concepto','ff-monto','ff-emision','ff-vence','ff-notas'].forEach(i=>document.getElementById(i).value='');
+    document.getElementById('ff-moneda').value='USD';
+    document.getElementById('ff-estado').value='Pendiente';
+    document.getElementById('ff-producto').value='warroom';
+  }
+  document.getElementById('fac-overlay').classList.add('open');
+}
+async function saveFactura(){
+  const d={cliente:document.getElementById('ff-cliente').value.trim(),concepto:document.getElementById('ff-concepto').value.trim(),monto:document.getElementById('ff-monto').value,moneda:document.getElementById('ff-moneda').value,fecha_emision:document.getElementById('ff-emision').value||null,fecha_vence:document.getElementById('ff-vence').value||null,estado:document.getElementById('ff-estado').value,producto:document.getElementById('ff-producto').value,notas:document.getElementById('ff-notas').value.trim()};
+  if(!d.cliente){toast('Escribí el cliente');return;}
+  if(editFacId){await db.from('facturas').update(d).eq('id',editFacId);}
+  else{await db.from('facturas').insert(d);}
+  toast(editFacId?'Factura actualizada ✓':'Factura agregada ✓');
+  closeOverlay('fac-overlay');await loadFacturas();renderFacturacion();
+}
+async function deleteFactura(){
+  if(!confirm('¿Eliminar esta factura?'))return;
+  await db.from('facturas').delete().eq('id',editFacId);
+  toast('Factura eliminada');closeOverlay('fac-overlay');await loadFacturas();renderFacturacion();
 }
 
-function showLoginError(msg) {
-  const el = document.getElementById('login-error');
-  el.textContent = msg; el.style.display = 'block';
+// ── OBJETIVOS ────────────────────────────────────────────────
+function renderObjetivos(){
+  const el=document.getElementById('obj-list');
+  if(!objetivos.length){el.innerHTML='<div class="empty">Sin objetivos cargados. <button class="btn btn-accent btn-sm" onclick="openObjetivoModal(null)" style="margin-left:8px">+ Agregar</button></div>';return;}
+  el.innerHTML=objetivos.map(o=>{
+    const pct=Math.min(100,Math.round((Number(o.actual)||0)/(Number(o.meta)||1)*100));
+    const col=colorVal(o.color||'accent');
+    return `<div class="obj-item">
+      <div class="obj-hd">
+        <div class="obj-label">${o.descripcion||'Objetivo'} <span style="font-size:11px;color:var(--t3)">${o.periodo||''}</span></div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div class="obj-val"><span>${o.actual||0}</span> / ${o.meta||0} ${o.unidad||''}</div>
+          <button class="card-btn edit" onclick="openObjetivoModal(${o.id})">Editar</button>
+        </div>
+      </div>
+      <div class="obj-track"><div class="obj-fill" style="width:${pct}%;background:${col}"></div></div>
+      <div class="obj-sub">${pct}% completado</div>
+    </div>`;
+  }).join('');
+}
+function openObjetivoModal(id){
+  editObjId=id;
+  document.getElementById('obj-modal-title').textContent=id?'Editar objetivo':'Nuevo objetivo';
+  document.getElementById('obj-del-btn').style.display=id?'inline-flex':'none';
+  if(id){
+    const o=objetivos.find(x=>x.id===id);
+    document.getElementById('fo-desc').value=o.descripcion||'';
+    document.getElementById('fo-actual').value=o.actual||'';
+    document.getElementById('fo-meta').value=o.meta||'';
+    document.getElementById('fo-unidad').value=o.unidad||'';
+    document.getElementById('fo-periodo').value=o.periodo||'';
+    document.getElementById('fo-color').value=o.color||'accent';
+  } else {
+    ['fo-desc','fo-actual','fo-meta','fo-unidad','fo-periodo'].forEach(i=>document.getElementById(i).value='');
+    document.getElementById('fo-color').value='accent';
+  }
+  document.getElementById('obj-overlay').classList.add('open');
+}
+async function saveObjetivo(){
+  const d={descripcion:document.getElementById('fo-desc').value.trim(),actual:document.getElementById('fo-actual').value,meta:document.getElementById('fo-meta').value,unidad:document.getElementById('fo-unidad').value.trim(),periodo:document.getElementById('fo-periodo').value.trim(),color:document.getElementById('fo-color').value};
+  if(!d.descripcion){toast('Escribí la descripción');return;}
+  if(editObjId){await db.from('objetivos').update(d).eq('id',editObjId);}
+  else{await db.from('objetivos').insert(d);}
+  toast(editObjId?'Objetivo actualizado ✓':'Objetivo agregado ✓');
+  closeOverlay('obj-overlay');await loadObjetivos();renderObjetivos();
+}
+async function deleteObjetivo(){
+  if(!confirm('¿Eliminar este objetivo?'))return;
+  await db.from('objetivos').delete().eq('id',editObjId);
+  toast('Objetivo eliminado');closeOverlay('obj-overlay');await loadObjetivos();renderObjetivos();
 }
 
-async function doLogout() {
-  await db.auth.signOut();
-  showLogin();
+// ── FEATURES ─────────────────────────────────────────────────
+function renderFeats(prod,elId){
+  const el=document.getElementById(elId);
+  const data=features.filter(f=>f.producto===prod);
+  if(!data.length){el.innerHTML=`<div class="empty" style="padding:20px 0">Sin features cargadas.</div>`;return;}
+  const icons={done:'fc-done ✓',wip:'fc-wip →',todo:'fc-todo ○'};
+  el.innerHTML=data.map(f=>{
+    const[cls,ic]=(icons[f.estado]||icons.todo).split(' ');
+    return `<div class="feat-item">
+      <div class="fc ${cls}">${ic}</div>
+      <div class="feat-txt"><strong>${f.nombre||''}</strong>${f.descripcion?' — '+f.descripcion:''}</div>
+      <div class="feat-actions"><button class="card-btn edit" onclick="openFeatModal('${prod}',${f.id})">Editar</button></div>
+    </div>`;
+  }).join('');
+}
+function openFeatModal(prod,id){
+  editFeatId=id;
+  document.getElementById('feat-modal-title').textContent=id?'Editar feature':'Nueva feature';
+  document.getElementById('feat-del-btn').style.display=id?'inline-flex':'none';
+  if(id){
+    const f=features.find(x=>x.id===id);
+    document.getElementById('ff2-nombre').value=f.nombre||'';
+    document.getElementById('ff2-desc').value=f.descripcion||'';
+    document.getElementById('ff2-estado').value=f.estado||'todo';
+    document.getElementById('ff2-prod').value=f.producto||prod;
+  } else {
+    document.getElementById('ff2-nombre').value='';
+    document.getElementById('ff2-desc').value='';
+    document.getElementById('ff2-estado').value='todo';
+    document.getElementById('ff2-prod').value=prod;
+  }
+  document.getElementById('feat-overlay').classList.add('open');
+}
+async function saveFeat(){
+  const d={nombre:document.getElementById('ff2-nombre').value.trim(),descripcion:document.getElementById('ff2-desc').value.trim(),estado:document.getElementById('ff2-estado').value,producto:document.getElementById('ff2-prod').value};
+  if(!d.nombre){toast('Escribí el nombre');return;}
+  if(editFeatId){await db.from('features').update(d).eq('id',editFeatId);}
+  else{await db.from('features').insert(d);}
+  toast(editFeatId?'Feature actualizada ✓':'Feature agregada ✓');
+  closeOverlay('feat-overlay');await loadFeatures();renderWarroom();
+}
+async function deleteFeat(){
+  if(!confirm('¿Eliminar esta feature?'))return;
+  await db.from('features').delete().eq('id',editFeatId);
+  toast('Feature eliminada');closeOverlay('feat-overlay');await loadFeatures();renderWarroom();renderPA();
 }
 
-init();
+// ── PROD INFO ────────────────────────────────────────────────
+function renderProdInfoCard(key,elId){
+  const p=prodInfo[key]||{};
+  const el=document.getElementById(elId);
+  el.innerHTML=`
+    <div style="display:flex;flex-direction:column;gap:10px">
+      ${p.estado?`<div><div style="font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:3px">Estado</div><div style="font-size:13px;color:var(--text)">${p.estado}</div></div>`:''}
+      ${p.precio?`<div><div style="font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:3px">Precio</div><div style="font-size:13px;color:var(--accent)">USD ${Number(p.precio).toLocaleString()}/año</div></div>`:''}
+      ${p.modelo?`<div><div style="font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:3px">Modelo</div><div style="font-size:13px;color:var(--text)">${p.modelo}</div></div>`:''}
+      ${p.clientes_activos?`<div><div style="font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:3px">Clientes activos</div><div style="font-size:13px;color:var(--text)">${p.clientes_activos}</div></div>`:''}
+      ${p.arr?`<div><div style="font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:3px">ARR</div><div style="font-size:13px;color:var(--accent)">USD ${Number(p.arr).toLocaleString()}</div></div>`:''}
+      <button class="btn btn-sm" style="margin-top:6px" onclick="openProdInfoModal('${key}')">✏️ Editar info</button>
+    </div>`;
+}
+function openProdInfoModal(key){
+  editProdKey=key;
+  const p=prodInfo[key]||{};
+  document.getElementById('prod-modal-title').textContent=`Info — ${key==='warroom'?'Warroom':'Public Affairs'}`;
+  document.getElementById('fp-desc').value=p.descripcion||'';
+  document.getElementById('fp-estado').value=p.estado||'';
+  document.getElementById('fp-precio').value=p.precio||'';
+  document.getElementById('fp-modelo').value=p.modelo||'';
+  document.getElementById('fp-clientes').value=p.clientes_activos||'';
+  document.getElementById('fp-arr').value=p.arr||'';
+  document.getElementById('prod-overlay').classList.add('open');
+}
+async function saveProdInfo(){
+  const d={key:editProdKey,descripcion:document.getElementById('fp-desc').value.trim(),estado:document.getElementById('fp-estado').value.trim(),precio:document.getElementById('fp-precio').value,modelo:document.getElementById('fp-modelo').value.trim(),clientes_activos:document.getElementById('fp-clientes').value,arr:document.getElementById('fp-arr').value};
+  const{error}=await db.from('prod_info').upsert(d,{onConflict:'key'});
+  if(error){toast('Error al guardar');return;}
+  toast('Info actualizada ✓');closeOverlay('prod-overlay');await loadProdInfo();renderWarroom();renderPA();
+}
 
-// Revenue chart
-const months = [1200, 2100, 1800, 3400, 4200];
-const maxV = Math.max(...months);
-const chart = document.getElementById('rev-chart');
-months.forEach((v, i) => {
-  const wrap = document.createElement('div');
-  wrap.className = 'rev-bar-wrap';
-  const h = Math.round((v / maxV) * 72);
-  const isLast = i === months.length - 1;
-  wrap.innerHTML = `<div class="rev-bar" style="height:${h}px;background:${isLast ? 'var(--accent)' : 'var(--surface-3)'};border:1px solid ${isLast ? 'rgba(200,240,101,0.3)' : 'var(--border)'}"></div>`;
-  chart.appendChild(wrap);
-});
+// ── WARROOM ──────────────────────────────────────────────────
+function renderWarroom(){
+  const p=prodInfo['warroom']||{};
+  if(p.descripcion)document.getElementById('ww-desc').textContent=p.descripcion;
+  renderFeats('warroom','ww-feats');
+  renderProdInfoCard('warroom','ww-info');
+}
+
+// ── PUBLIC AFFAIRS ───────────────────────────────────────────
+function renderPA(){
+  const p=prodInfo['public_affairs']||{};
+  if(p.descripcion)document.getElementById('pa-desc').textContent=p.descripcion;
+  renderDiscovery();
+  renderProdInfoCard('public_affairs','pa-info');
+}
+function renderDiscovery(){
+  const el=document.getElementById('pa-discovery');
+  if(!discovery.length){el.innerHTML=`<div class="empty" style="padding:20px 0">Sin etapas cargadas.</div>`;return;}
+  const icons={done:'dn-done ✓',active:'dn-active →',todo:'dn-todo'};
+  el.innerHTML=discovery.map((d,i)=>{
+    const[cls,ic]=(icons[d.estado]||icons.todo).split(' ');
+    return `<div class="disc-item">
+      <div class="disc-n ${cls}">${ic||i+1}</div>
+      <div class="disc-body">
+        <div class="disc-title">${d.titulo||'Etapa'}</div>
+        <div class="disc-desc">${d.descripcion||''}</div>
+      </div>
+      <div class="disc-status" style="display:flex;flex-direction:column;gap:4px;align-items:flex-end">
+        <div>${d.fecha||''}</div>
+        <button class="card-btn edit" onclick="openDiscoveryModal(${d.id})">Editar</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+function openDiscoveryModal(id){
+  editDiscId=id;
+  document.getElementById('disc-modal-title').textContent=id?'Editar etapa':'Nueva etapa';
+  document.getElementById('disc-del-btn').style.display=id?'inline-flex':'none';
+  if(id){
+    const d=discovery.find(x=>x.id===id);
+    document.getElementById('fd-titulo').value=d.titulo||'';
+    document.getElementById('fd-desc').value=d.descripcion||'';
+    document.getElementById('fd-estado').value=d.estado||'todo';
+    document.getElementById('fd-fecha').value=d.fecha||'';
+  } else {
+    ['fd-titulo','fd-desc','fd-fecha'].forEach(i=>document.getElementById(i).value='');
+    document.getElementById('fd-estado').value='todo';
+  }
+  document.getElementById('disc-overlay').classList.add('open');
+}
+async function saveDisc(){
+  const d={titulo:document.getElementById('fd-titulo').value.trim(),descripcion:document.getElementById('fd-desc').value.trim(),estado:document.getElementById('fd-estado').value,fecha:document.getElementById('fd-fecha').value.trim(),orden:editDiscId?(discovery.find(x=>x.id===editDiscId)?.orden||discovery.length+1):discovery.length+1};
+  if(!d.titulo){toast('Escribí el título');return;}
+  if(editDiscId){await db.from('discovery').update(d).eq('id',editDiscId);}
+  else{await db.from('discovery').insert(d);}
+  toast(editDiscId?'Etapa actualizada ✓':'Etapa agregada ✓');
+  closeOverlay('disc-overlay');await loadDiscovery();renderPA();
+}
+async function deleteDisc(){
+  if(!confirm('¿Eliminar esta etapa?'))return;
+  await db.from('discovery').delete().eq('id',editDiscId);
+  toast('Etapa eliminada');closeOverlay('disc-overlay');await loadDiscovery();renderPA();
+}
+
+// ── TOAST ────────────────────────────────────────────────────
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500);}
+
+initAuth();
 </script>
 </body>
 </html>
