@@ -596,15 +596,45 @@ function showErr(el,msg){el.textContent=msg;el.style.display='block';}
 
 // ── LOAD ─────────────────────────────────────────────────────
 async function loadAll(){
-  await Promise.all([loadLeads(),loadFacturas(),loadObjetivos(),loadFeatures(),loadDiscovery(),loadProdInfo()]);
-  renderDashboard();checkTodayAuto();
+  await loadLeads();
+  await loadFacturas();
+  await loadObjetivos();
+  await loadFeatures();
+  await loadDiscovery();
+  await loadProdInfo();
+  renderDashboard();
+  checkTodayAuto();
 }
-async function loadLeads(){const{data}=await db.from('leads').select('*').order('created_at',{ascending:false});leads=data||[];}
-async function loadFacturas(){const{data}=await db.from('facturas').select('*').order('created_at',{ascending:false}).catch(()=>({data:[]}));facturas=data||[];}
-async function loadObjetivos(){const{data}=await db.from('objetivos').select('*').order('created_at',{ascending:true}).catch(()=>({data:[]}));objetivos=data||[];}
-async function loadFeatures(){const{data}=await db.from('features').select('*').order('created_at',{ascending:true}).catch(()=>({data:[]}));features=data||[];}
-async function loadDiscovery(){const{data}=await db.from('discovery').select('*').order('orden',{ascending:true}).catch(()=>({data:[]}));discovery=data||[];}
-async function loadProdInfo(){const{data}=await db.from('prod_info').select('*').catch(()=>({data:[]}));if(data){data.forEach(r=>{prodInfo[r.key]=r;});}}
+async function loadLeads(){
+  const{data,error}=await db.from('leads').select('*').order('created_at',{ascending:false});
+  if(error){console.error('leads error:',error.message);return;}
+  leads=data||[];
+}
+async function loadFacturas(){
+  const{data,error}=await db.from('facturas').select('*').order('created_at',{ascending:false});
+  if(error){console.error('facturas error:',error.message);facturas=[];return;}
+  facturas=data||[];
+}
+async function loadObjetivos(){
+  const{data,error}=await db.from('objetivos').select('*').order('created_at',{ascending:true});
+  if(error){console.error('objetivos error:',error.message);objetivos=[];return;}
+  objetivos=data||[];
+}
+async function loadFeatures(){
+  const{data,error}=await db.from('features').select('*').order('created_at',{ascending:true});
+  if(error){console.error('features error:',error.message);features=[];return;}
+  features=data||[];
+}
+async function loadDiscovery(){
+  const{data,error}=await db.from('discovery').select('*').order('orden',{ascending:true});
+  if(error){console.error('discovery error:',error.message);discovery=[];return;}
+  discovery=data||[];
+}
+async function loadProdInfo(){
+  const{data,error}=await db.from('prod_info').select('*');
+  if(error){console.error('prod_info error:',error.message);return;}
+  if(data){data.forEach(r=>{if(r.key)prodInfo[r.key]=r;});}
+}
 
 // ── NAV ──────────────────────────────────────────────────────
 const pageTitles={dashboard:'Dashboard',leads:'Leads',facturacion:'Facturación',objetivos:'Objetivos',warroom:'Warroom',publicaffairs:'Public Affairs'};
@@ -859,8 +889,10 @@ function openFacturaModal(id){
 async function saveFactura(){
   const d={cliente:document.getElementById('ff-cliente').value.trim(),concepto:document.getElementById('ff-concepto').value.trim(),monto:document.getElementById('ff-monto').value,moneda:document.getElementById('ff-moneda').value,fecha_emision:document.getElementById('ff-emision').value||null,fecha_vence:document.getElementById('ff-vence').value||null,estado:document.getElementById('ff-estado').value,producto:document.getElementById('ff-producto').value,notas:document.getElementById('ff-notas').value.trim()};
   if(!d.cliente){toast('Escribí el cliente');return;}
-  if(editFacId){await db.from('facturas').update(d).eq('id',editFacId);}
-  else{await db.from('facturas').insert(d);}
+  let err;
+  if(editFacId){const r=await db.from('facturas').update(d).eq('id',editFacId);err=r.error;}
+  else{const r=await db.from('facturas').insert(d);err=r.error;}
+  if(err){console.error('saveFactura error:',err);toast('Error: '+err.message);return;}
   toast(editFacId?'Factura actualizada ✓':'Factura agregada ✓');
   closeOverlay('fac-overlay');await loadFacturas();renderFacturacion();
 }
@@ -911,8 +943,10 @@ function openObjetivoModal(id){
 async function saveObjetivo(){
   const d={descripcion:document.getElementById('fo-desc').value.trim(),actual:document.getElementById('fo-actual').value,meta:document.getElementById('fo-meta').value,unidad:document.getElementById('fo-unidad').value.trim(),periodo:document.getElementById('fo-periodo').value.trim(),color:document.getElementById('fo-color').value};
   if(!d.descripcion){toast('Escribí la descripción');return;}
-  if(editObjId){await db.from('objetivos').update(d).eq('id',editObjId);}
-  else{await db.from('objetivos').insert(d);}
+  let err2;
+  if(editObjId){const r=await db.from('objetivos').update(d).eq('id',editObjId);err2=r.error;}
+  else{const r=await db.from('objetivos').insert(d);err2=r.error;}
+  if(err2){console.error('saveObjetivo error:',err2);toast('Error: '+err2.message);return;}
   toast(editObjId?'Objetivo actualizado ✓':'Objetivo agregado ✓');
   closeOverlay('obj-overlay');await loadObjetivos();renderObjetivos();
 }
@@ -958,8 +992,10 @@ function openFeatModal(prod,id){
 async function saveFeat(){
   const d={nombre:document.getElementById('ff2-nombre').value.trim(),descripcion:document.getElementById('ff2-desc').value.trim(),estado:document.getElementById('ff2-estado').value,producto:document.getElementById('ff2-prod').value};
   if(!d.nombre){toast('Escribí el nombre');return;}
-  if(editFeatId){await db.from('features').update(d).eq('id',editFeatId);}
-  else{await db.from('features').insert(d);}
+  let err3;
+  if(editFeatId){const r=await db.from('features').update(d).eq('id',editFeatId);err3=r.error;}
+  else{const r=await db.from('features').insert(d);err3=r.error;}
+  if(err3){console.error('saveFeat error:',err3);toast('Error: '+err3.message);return;}
   toast(editFeatId?'Feature actualizada ✓':'Feature agregada ✓');
   closeOverlay('feat-overlay');await loadFeatures();renderWarroom();
 }
@@ -996,9 +1032,18 @@ function openProdInfoModal(key){
   document.getElementById('prod-overlay').classList.add('open');
 }
 async function saveProdInfo(){
-  const d={key:editProdKey,descripcion:document.getElementById('fp-desc').value.trim(),estado:document.getElementById('fp-estado').value.trim(),precio:document.getElementById('fp-precio').value,modelo:document.getElementById('fp-modelo').value.trim(),clientes_activos:document.getElementById('fp-clientes').value,arr:document.getElementById('fp-arr').value};
-  const{error}=await db.from('prod_info').upsert(d,{onConflict:'key'});
-  if(error){toast('Error al guardar');return;}
+  const d={key:editProdKey,descripcion:document.getElementById('fp-desc').value.trim(),estado:document.getElementById('fp-estado').value.trim(),precio:document.getElementById('fp-precio').value||null,modelo:document.getElementById('fp-modelo').value.trim(),clientes_activos:document.getElementById('fp-clientes').value||0,arr:document.getElementById('fp-arr').value||0};
+  // Check if record exists for this key
+  const{data:existing}=await db.from('prod_info').select('id').eq('key',editProdKey);
+  let saveErr;
+  if(existing&&existing.length>0){
+    const r=await db.from('prod_info').update(d).eq('key',editProdKey);
+    saveErr=r.error;
+  } else {
+    const r=await db.from('prod_info').insert(d);
+    saveErr=r.error;
+  }
+  if(saveErr){console.error('saveProdInfo error:',saveErr);toast('Error: '+saveErr.message);return;}
   toast('Info actualizada ✓');closeOverlay('prod-overlay');await loadProdInfo();renderWarroom();renderPA();
 }
 
@@ -1055,8 +1100,10 @@ function openDiscoveryModal(id){
 async function saveDisc(){
   const d={titulo:document.getElementById('fd-titulo').value.trim(),descripcion:document.getElementById('fd-desc').value.trim(),estado:document.getElementById('fd-estado').value,fecha:document.getElementById('fd-fecha').value.trim(),orden:editDiscId?(discovery.find(x=>x.id===editDiscId)?.orden||discovery.length+1):discovery.length+1};
   if(!d.titulo){toast('Escribí el título');return;}
-  if(editDiscId){await db.from('discovery').update(d).eq('id',editDiscId);}
-  else{await db.from('discovery').insert(d);}
+  let err4;
+  if(editDiscId){const r=await db.from('discovery').update(d).eq('id',editDiscId);err4=r.error;}
+  else{const r=await db.from('discovery').insert(d);err4=r.error;}
+  if(err4){console.error('saveDisc error:',err4);toast('Error: '+err4.message);return;}
   toast(editDiscId?'Etapa actualizada ✓':'Etapa agregada ✓');
   closeOverlay('disc-overlay');await loadDiscovery();renderPA();
 }
